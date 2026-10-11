@@ -301,17 +301,6 @@ export const Navbar: React.FC<NavbarProps> = ({
 
                   {/* Actions */}
                   <div className="space-y-1 pt-1">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowRoleDropdown(false);
-                        setShowAvatarPicker(true);
-                      }}
-                      className="w-full text-left px-3 py-2 text-indigo-300 hover:bg-slate-800 rounded-xl transition flex items-center gap-2.5 text-xs font-semibold cursor-pointer"
-                    >
-                      <Smile className="w-4 h-4 text-indigo-400 shrink-0" />
-                      <span>Choose Avatar DP</span>
-                    </button>
 
                     {currentUser.role === 'psychologist' && currentUser.plan !== 'premium' && (
                       <button
