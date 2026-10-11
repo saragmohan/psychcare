@@ -1,0 +1,40 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Practitioner Profile Privacy
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && (request.auth.uid == userId || request.auth.token.role == 'admin');
+    }
+
+    // Client Directory Isolation (Strict Practitioner Ownership)
+    match /clients/{clientId} {
+      allow read, write, delete: if request.auth != null && 
+        (request.auth.uid == resource.data.psychologistId || request.auth.uid == request.resource.data.psychologistId);
+    }
+
+    // Clinical SOAP Notes Isolation (Strict Practitioner Ownership)
+    match /notes/{noteId} {
+      allow read, write, delete: if request.auth != null && 
+        (request.auth.uid == resource.data.psychologistId || request.auth.uid == request.resource.data.psychologistId);
+    }
+
+    // Psychometric Assessment Results Isolation
+    match /assessments/{assessmentId} {
+      allow read, write, delete: if request.auth != null && 
+        (request.auth.uid == resource.data.psychologistId || request.auth.uid == request.resource.data.psychologistId);
+    }
+
+    // Calendar Appointments Isolation
+    match /appointments/{appointmentId} {
+      allow read, write, delete: if request.auth != null && 
+        (request.auth.uid == resource.data.psychologistId || request.auth.uid == request.resource.data.psychologistId);
+    }
+
+    // System Audit Logs (Admin Only Access)
+    match /logs/{logId} {
+      allow read, create: if request.auth != null && request.auth.token.role == 'admin';
+    }
+  }
+}
