@@ -111,12 +111,12 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-center items-center p-3 sm:p-4 font-sans relative overflow-hidden">
+    <div className="min-h-screen min-h-[100dvh] w-full max-w-full bg-slate-950 text-slate-100 flex flex-col justify-center items-center p-3 sm:p-6 font-sans relative overflow-x-hidden overflow-y-auto pt-[max(1rem,env(safe-area-inset-top,0px))] pb-[max(1.5rem,env(safe-area-inset-bottom,0px))]">
       {/* Serene Ambient Background Gradients */}
       <div className="absolute top-0 right-1/4 w-96 h-96 bg-indigo-600/15 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-teal-500/15 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="w-full max-w-md bg-slate-900 border border-slate-800/80 rounded-3xl p-5 sm:p-8 shadow-2xl relative z-10 space-y-5 sm:space-y-6 my-auto">
+      <div className="w-full max-w-md bg-slate-900 border border-slate-800/80 rounded-3xl p-4 sm:p-8 shadow-2xl relative z-10 space-y-4 sm:space-y-6 my-auto">
         {/* Brand Header */}
         <div className="text-center space-y-2">
           <div className="inline-flex items-center justify-center p-3 bg-gradient-to-tr from-indigo-500 to-teal-400 rounded-2xl shadow-lg shadow-indigo-500/20 mb-1">

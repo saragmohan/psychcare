@@ -57,7 +57,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   }, [showRoleDropdown]);
 
   return (
-    <header className="bg-slate-900/95 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40 text-white shadow-xl">
+    <header className="bg-slate-900/95 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40 text-white shadow-xl pt-[env(safe-area-inset-top,0px)]">
       {/* Banned Alert Banner */}
       {currentUser.status === 'banned' && (
         <div className="bg-red-600/90 text-white text-[11px] font-semibold px-3 py-1.5 flex items-center justify-center gap-1.5 text-center">
@@ -184,17 +184,23 @@ export const Navbar: React.FC<NavbarProps> = ({
           )}
 
           {/* Right Header Actions */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
 
             {currentUser.role === 'psychologist' && currentUser.status !== 'banned' && (
               <>
                 {currentUser.plan === 'trial' && (
                   <button
                     onClick={onOpenPaywall}
-                    className="flex items-center gap-1.5 bg-amber-500/20 border border-amber-500/40 text-amber-300 px-2.5 py-1 rounded-xl text-[11px] font-semibold"
+                    className="flex items-center gap-1 bg-amber-500/20 border border-amber-500/40 text-amber-300 px-2 py-1 rounded-xl text-[10px] sm:text-[11px] font-semibold shrink-0"
+                    title={`Trial: ${trialTime.formatted} remaining`}
                   >
-                    <Clock className="w-3 h-3 text-amber-400 animate-pulse" />
-                    <span><strong className="text-amber-200">{trialTime.formatted}</strong></span>
+                    <Clock className="w-3 h-3 text-amber-400 animate-pulse shrink-0" />
+                    <span>
+                      <strong className="text-amber-200 hidden sm:inline">{trialTime.formatted}</strong>
+                      <strong className="text-amber-200 sm:hidden">
+                        {trialTime.days > 0 ? `${trialTime.days}d left` : `${trialTime.hours}h left`}
+                      </strong>
+                    </span>
                   </button>
                 )}
 
