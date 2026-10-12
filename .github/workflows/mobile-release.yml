@@ -43,10 +43,10 @@ jobs:
           cd android
           ./gradlew bundleRelease
 
-      - name: Build Android APK (Release APK)
+      - name: Build Installable Android APK (Signed)
         run: |
           cd android
-          ./gradlew assembleRelease
+          ./gradlew assembleDebug
 
       - name: Upload Android App Bundle (.aab) Artifact
         uses: actions/upload-artifact@v4
@@ -54,11 +54,11 @@ jobs:
           name: psychcare-release-aab
           path: android/app/build/outputs/bundle/release/*.aab
 
-      - name: Upload Android APK (.apk) Artifact
+      - name: Upload Installable Android APK (.apk) Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: psychcare-release-apk
-          path: android/app/build/outputs/apk/release/*.apk
+          name: psychcare-installable-apk
+          path: android/app/build/outputs/apk/debug/*.apk
 
   build-ios:
     name: Build iOS App Archive
