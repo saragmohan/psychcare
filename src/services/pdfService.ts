@@ -1,11 +1,55 @@
 import jsPDF from 'jspdf';
+import { Capacitor } from '@capacitor/core';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
 import type { Client, SessionNote, User, AssessmentResult } from '../types';
 
-export function generateSessionNotePdf(
+async function saveOrSharePdf(doc: jsPDF, filename: string): Promise<void> {
+  if (Capacitor.isNativePlatform()) {
+    try {
+      const dataUri = doc.output('datauristring');
+      const base64Data = dataUri.split(',')[1];
+
+      // Write to app Cache directory
+      const fileResult = await Filesystem.writeFile({
+        path: filename,
+        data: base64Data,
+        directory: Directory.Cache,
+      });
+
+      // Open native Share / Save sheet
+      await Share.share({
+        title: filename,
+        text: `Clinical Report: ${filename}`,
+        url: fileResult.uri,
+        dialogTitle: 'Save, View or Share PDF Report',
+      });
+    } catch (err) {
+      console.warn('Native share failed, attempting fallback to Documents:', err);
+      try {
+        const dataUri = doc.output('datauristring');
+        const base64Data = dataUri.split(',')[1];
+        await Filesystem.writeFile({
+          path: filename,
+          data: base64Data,
+          directory: Directory.Documents,
+        });
+        alert(`Report saved to Documents: ${filename}`);
+      } catch (fallbackErr) {
+        console.error('Native PDF fallback failed:', fallbackErr);
+        doc.save(filename);
+      }
+    }
+  } else {
+    doc.save(filename);
+  }
+}
+
+export async function generateSessionNotePdf(
   client: Client,
   note: SessionNote,
   psychologist: User
-) {
+): Promise<void> {
   const doc = new jsPDF();
 
   doc.setFillColor(79, 70, 229);
@@ -101,14 +145,15 @@ export function generateSessionNotePdf(
   doc.setTextColor(150, 150, 150);
   doc.text('Generated via PsychCare Practice System. Strictly confidential.', 14, 285);
 
-  doc.save(`Session_Note_${client.fullName.replace(/\s+/g, '_')}_${note.date}.pdf`);
+  const filename = `Session_Note_${client.fullName.replace(/\s+/g, '_')}_${note.date}.pdf`;
+  await saveOrSharePdf(doc, filename);
 }
 
-export function generateAssessmentPdf(
+export async function generateAssessmentPdf(
   client: Client,
   assessment: AssessmentResult,
   psychologist: User
-) {
+): Promise<void> {
   const doc = new jsPDF();
 
   doc.setFillColor(15, 23, 42);
@@ -169,5 +214,6 @@ export function generateAssessmentPdf(
   doc.setTextColor(150, 150, 150);
   doc.text('PsychCare Clinical Assessment Module - Confidential', 14, 285);
 
-  doc.save(`${assessment.type}_Report_${client.fullName.replace(/\s+/g, '_')}_${assessment.date}.pdf`);
+  const filename = `${assessment.type}_Report_${client.fullName.replace(/\s+/g, '_')}_${assessment.date}.pdf`;
+  await saveOrSharePdf(doc, filename);
 }
