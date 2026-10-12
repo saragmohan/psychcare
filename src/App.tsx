@@ -74,7 +74,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen min-h-[100dvh] w-full max-w-full overflow-x-hidden bg-slate-950 text-slate-100 font-sans antialiased pb-[calc(5rem+env(safe-area-inset-bottom,0px))] md:pb-10">
+    <div className="min-h-screen min-h-[100dvh] w-full bg-slate-950 text-slate-100 font-sans antialiased pb-[calc(5rem+env(safe-area-inset-bottom,0px))] md:pb-10 flex-1">
       <Navbar
         currentUser={currentUser}
         onOpenPaywall={() => setIsPaywallOpen(true)}
