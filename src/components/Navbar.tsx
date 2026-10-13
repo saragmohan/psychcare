@@ -152,23 +152,63 @@ export const Navbar: React.FC<NavbarProps> = ({
           )}
 
           {currentUser.role === 'admin' && (
-            <nav className="hidden md:flex items-center gap-1 bg-amber-950/30 p-1 rounded-xl border border-amber-800/40">
+            <nav className="hidden md:flex items-center gap-1 bg-slate-950/60 p-1 rounded-xl border border-slate-800">
               <button
                 onClick={() => setActiveTab('admin_dashboard')}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                   activeTab === 'admin_dashboard' || activeTab === 'dashboard'
                     ? 'bg-amber-600 text-white shadow-md'
-                    : 'text-amber-300 hover:bg-amber-900/40'
+                    : 'text-amber-300 hover:bg-amber-950/60'
                 }`}
               >
-                Overview
+                Admin Console
+              </button>
+              <button
+                onClick={() => setActiveTab('clients')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  activeTab === 'clients'
+                    ? 'bg-indigo-600 text-white shadow-md'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Patients
+              </button>
+              <button
+                onClick={() => setActiveTab('notes')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  activeTab === 'notes'
+                    ? 'bg-indigo-600 text-white shadow-md'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                SOAP Notes
+              </button>
+              <button
+                onClick={() => setActiveTab('assessments')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  activeTab === 'assessments'
+                    ? 'bg-indigo-600 text-white shadow-md'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Assessments
+              </button>
+              <button
+                onClick={() => setActiveTab('appointments')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  activeTab === 'appointments'
+                    ? 'bg-indigo-600 text-white shadow-md'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Calendar
               </button>
               <button
                 onClick={() => setActiveTab('admin_users')}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                   activeTab === 'admin_users'
                     ? 'bg-amber-600 text-white shadow-md'
-                    : 'text-amber-300 hover:bg-amber-900/40'
+                    : 'text-amber-400/80 hover:bg-amber-950/50'
                 }`}
               >
                 Practitioners
@@ -178,10 +218,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                   activeTab === 'admin_logs'
                     ? 'bg-amber-600 text-white shadow-md'
-                    : 'text-amber-300 hover:bg-amber-900/40'
+                    : 'text-amber-400/80 hover:bg-amber-950/50'
                 }`}
               >
-                Audit Logs
+                Logs
               </button>
             </nav>
           )}

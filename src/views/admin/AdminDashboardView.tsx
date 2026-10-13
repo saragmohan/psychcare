@@ -12,6 +12,8 @@ import {
   UserX,
   Trash2,
   Sparkles,
+  Activity,
+  Calendar,
 } from 'lucide-react';
 import type { User } from '../../types';
 import { storage } from '../../services/storageService';
@@ -140,6 +142,89 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
           >
             <Users className="w-4 h-4" />
             <span>Manage Users</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Reviewer & Admin Clinical Testing Suite */}
+      <div className="bg-gradient-to-r from-indigo-950/40 via-slate-900 to-teal-950/30 border border-indigo-500/30 p-4 sm:p-5 rounded-3xl shadow-xl space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+          <div className="flex items-center gap-2 text-xs font-bold text-indigo-400 uppercase tracking-wider">
+            <Sparkles className="w-4 h-4 text-teal-400 shrink-0" />
+            <span>Clinical Tools & Features Testing Suite</span>
+          </div>
+          <span className="text-[11px] text-slate-400">
+            Directly test patient records, SOAP notes, evaluations, and PDF reports
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+          <button
+            onClick={() => setActiveTab('clients')}
+            className="p-3 bg-slate-950/80 hover:bg-indigo-950/40 border border-slate-800 hover:border-indigo-500/50 rounded-2xl transition flex flex-col items-start gap-1.5 cursor-pointer text-left group"
+          >
+            <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-400 group-hover:scale-105 transition">
+              <Users className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="text-xs font-bold text-white group-hover:text-indigo-300 transition">
+                Patients & Intake
+              </div>
+              <div className="text-[10px] text-slate-400">
+                {allClients.length} patient records
+              </div>
+            </div>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('notes')}
+            className="p-3 bg-slate-950/80 hover:bg-indigo-950/40 border border-slate-800 hover:border-indigo-500/50 rounded-2xl transition flex flex-col items-start gap-1.5 cursor-pointer text-left group"
+          >
+            <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-400 group-hover:scale-105 transition">
+              <FileText className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="text-xs font-bold text-white group-hover:text-indigo-300 transition">
+                SOAP Notes & Voice
+              </div>
+              <div className="text-[10px] text-slate-400">
+                {allNotes.length} notes & PDF export
+              </div>
+            </div>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('assessments')}
+            className="p-3 bg-slate-950/80 hover:bg-teal-950/40 border border-slate-800 hover:border-teal-500/50 rounded-2xl transition flex flex-col items-start gap-1.5 cursor-pointer text-left group"
+          >
+            <div className="p-2 rounded-xl bg-teal-500/10 text-teal-400 group-hover:scale-105 transition">
+              <Activity className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="text-xs font-bold text-white group-hover:text-teal-300 transition">
+                PHQ-9 & GAD-7 Tests
+              </div>
+              <div className="text-[10px] text-slate-400">
+                {allAssessments.length} longitudinal tests
+              </div>
+            </div>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('appointments')}
+            className="p-3 bg-slate-950/80 hover:bg-indigo-950/40 border border-slate-800 hover:border-indigo-500/50 rounded-2xl transition flex flex-col items-start gap-1.5 cursor-pointer text-left group"
+          >
+            <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-400 group-hover:scale-105 transition">
+              <Calendar className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="text-xs font-bold text-white group-hover:text-indigo-300 transition">
+                Clinical Calendar
+              </div>
+              <div className="text-[10px] text-slate-400">
+                {allAppointments.length} scheduled visits
+              </div>
+            </div>
           </button>
         </div>
       </div>

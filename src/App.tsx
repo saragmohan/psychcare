@@ -13,7 +13,7 @@ import { AuditLogsView } from './views/admin/AuditLogsView';
 import { storage } from './services/storageService';
 import { authService } from './services/authService';
 import type { User } from './types';
-import { LayoutDashboard, Users, FileText, Activity, Calendar, History } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, Activity, Calendar } from 'lucide-react';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(authService.isAuthenticated());
@@ -192,33 +192,51 @@ export default function App() {
 
       {/* Mobile Bottom Navigation Bar for Admin */}
       {currentUser.role === 'admin' && (
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 w-full max-w-full bg-slate-900/95 border-t border-slate-800 backdrop-blur-lg pt-1.5 pb-[max(0.6rem,env(safe-area-inset-bottom,0px))] px-2 flex justify-around items-center z-40 shadow-2xl">
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 w-full max-w-full bg-slate-900/95 border-t border-slate-800 backdrop-blur-lg pt-1.5 pb-[max(0.6rem,env(safe-area-inset-bottom,0px))] px-1 flex justify-around items-center z-40 shadow-2xl">
           <button
             onClick={() => setActiveTab('admin_dashboard')}
-            className={`flex-1 flex flex-col items-center justify-center py-1 px-2 rounded-xl transition-all min-w-0 ${
+            className={`flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all min-w-0 ${
               activeTab === 'admin_dashboard' || activeTab === 'dashboard' ? 'text-amber-400 font-bold bg-amber-950/40' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
             <LayoutDashboard className="w-5 h-5 shrink-0" />
-            <span className="text-[10px] font-medium mt-0.5 truncate">Overview</span>
+            <span className="text-[10px] font-medium mt-0.5 truncate">Console</span>
           </button>
           <button
-            onClick={() => setActiveTab('admin_users')}
-            className={`flex-1 flex flex-col items-center justify-center py-1 px-2 rounded-xl transition-all min-w-0 ${
-              activeTab === 'admin_users' ? 'text-amber-400 font-bold bg-amber-950/40' : 'text-slate-400 hover:text-slate-200'
+            onClick={() => setActiveTab('clients')}
+            className={`flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all min-w-0 ${
+              activeTab === 'clients' ? 'text-indigo-400 font-bold bg-indigo-950/40' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
             <Users className="w-5 h-5 shrink-0" />
-            <span className="text-[10px] font-medium mt-0.5 truncate">Practitioners</span>
+            <span className="text-[10px] font-medium mt-0.5 truncate">Patients</span>
           </button>
           <button
-            onClick={() => setActiveTab('admin_logs')}
-            className={`flex-1 flex flex-col items-center justify-center py-1 px-2 rounded-xl transition-all min-w-0 ${
-              activeTab === 'admin_logs' ? 'text-amber-400 font-bold bg-amber-950/40' : 'text-slate-400 hover:text-slate-200'
+            onClick={() => setActiveTab('notes')}
+            className={`flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all min-w-0 ${
+              activeTab === 'notes' ? 'text-indigo-400 font-bold bg-indigo-950/40' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            <History className="w-5 h-5 shrink-0" />
-            <span className="text-[10px] font-medium mt-0.5 truncate">Audit Logs</span>
+            <FileText className="w-5 h-5 shrink-0" />
+            <span className="text-[10px] font-medium mt-0.5 truncate">Notes</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('assessments')}
+            className={`flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all min-w-0 ${
+              activeTab === 'assessments' ? 'text-teal-400 font-bold bg-teal-950/40' : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Activity className="w-5 h-5 shrink-0 text-teal-400" />
+            <span className="text-[10px] font-medium mt-0.5 truncate">Tests</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('appointments')}
+            className={`flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all min-w-0 ${
+              activeTab === 'appointments' ? 'text-indigo-400 font-bold bg-indigo-950/40' : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Calendar className="w-5 h-5 shrink-0" />
+            <span className="text-[10px] font-medium mt-0.5 truncate">Calendar</span>
           </button>
         </nav>
       )}

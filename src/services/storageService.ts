@@ -405,6 +405,10 @@ class StorageService {
 
   public getClients(psychologistId?: string): Client[] {
     if (psychologistId) {
+      const user = this.users.find((u) => u.id === psychologistId);
+      if (user?.role === 'admin' || psychologistId === 'usr_admin') {
+        return this.clients;
+      }
       return this.clients.filter((c) => c.psychologistId === psychologistId);
     }
     return this.clients;
@@ -447,8 +451,10 @@ class StorageService {
   }
 
   public getNotesForClient(clientId: string, psychologistId?: string): SessionNote[] {
+    const user = psychologistId ? this.users.find((u) => u.id === psychologistId) : undefined;
+    const isAdmin = user?.role === 'admin' || psychologistId === 'usr_admin';
     return this.notes
-      .filter((n) => n.clientId === clientId && (!psychologistId || n.psychologistId === psychologistId))
+      .filter((n) => n.clientId === clientId && (isAdmin || !psychologistId || n.psychologistId === psychologistId))
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }
 
@@ -478,8 +484,10 @@ class StorageService {
   }
 
   public getAssessmentsForClient(clientId: string, psychologistId?: string): AssessmentResult[] {
+    const user = psychologistId ? this.users.find((u) => u.id === psychologistId) : undefined;
+    const isAdmin = user?.role === 'admin' || psychologistId === 'usr_admin';
     return this.assessments
-      .filter((a) => a.clientId === clientId && (!psychologistId || a.psychologistId === psychologistId))
+      .filter((a) => a.clientId === clientId && (isAdmin || !psychologistId || a.psychologistId === psychologistId))
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   }
 
@@ -497,6 +505,10 @@ class StorageService {
 
   public getAppointments(psychologistId?: string): Appointment[] {
     if (psychologistId) {
+      const user = this.users.find((u) => u.id === psychologistId);
+      if (user?.role === 'admin' || psychologistId === 'usr_admin') {
+        return this.appointments;
+      }
       return this.appointments.filter((a) => a.psychologistId === psychologistId);
     }
     return this.appointments;
