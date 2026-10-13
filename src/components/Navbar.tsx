@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  Brain,
   Crown,
   Clock,
   ChevronDown,
@@ -73,8 +72,12 @@ export const Navbar: React.FC<NavbarProps> = ({
             className="flex items-center gap-2.5 cursor-pointer"
             onClick={() => setActiveTab(currentUser.role === 'admin' ? 'admin_dashboard' : 'dashboard')}
           >
-            <div className="bg-gradient-to-tr from-indigo-500 to-teal-400 p-1.5 sm:p-2 rounded-xl shadow-lg shadow-indigo-500/20">
-              <Brain className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+            <div className="p-1 bg-[#E4E0DA] rounded-xl shadow-md border border-slate-700/60 shrink-0">
+              <img
+                src="/logo.png"
+                alt="PsychCare"
+                className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg object-contain"
+              />
             </div>
             <div>
               <span className="font-extrabold text-base sm:text-lg tracking-tight bg-gradient-to-r from-white via-indigo-100 to-indigo-300 bg-clip-text text-transparent">

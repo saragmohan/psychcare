@@ -2,6 +2,7 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut,
+  sendPasswordResetEmail,
 } from 'firebase/auth';
 import { auth, isFirebaseConfigured } from './firebase';
 import { storage } from './storageService';
@@ -10,6 +11,7 @@ import { AVATAR_CHARACTERS, getDefaultAvatar } from './avatarCharacters';
 
 const AUTH_KEY = 'psychcare_auth_session_v1';
 const CREDENTIALS_KEY = 'psychcare_user_credentials_v1';
+const REMEMBER_KEY = 'psychcare_remember_credentials_v1';
 
 class AuthService {
   private authenticated: boolean = false;
@@ -24,6 +26,34 @@ class AuthService {
 
   public isAuthenticated(): boolean {
     return this.authenticated;
+  }
+
+  public getRememberedCredentials(): { email: string; password: string } | null {
+    try {
+      const data = localStorage.getItem(REMEMBER_KEY);
+      return data ? JSON.parse(data) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  public saveRememberedCredentials(email: string, pass: string): void {
+    try {
+      localStorage.setItem(
+        REMEMBER_KEY,
+        JSON.stringify({ email: email.trim(), password: pass })
+      );
+    } catch (e) {
+      console.warn('Failed to save remembered credentials:', e);
+    }
+  }
+
+  public clearRememberedCredentials(): void {
+    try {
+      localStorage.removeItem(REMEMBER_KEY);
+    } catch (e) {
+      console.warn('Failed to clear remembered credentials:', e);
+    }
   }
 
   private getStoredCredentials(): Record<string, string> {
@@ -44,7 +74,9 @@ class AuthService {
 
     // 1. Explicit Administrator Authentication
     if (normalized === 'admin' || normalized === 'admin@psychcare.app') {
-      if (pass !== '!Inikasijoy1') {
+      const creds = this.getStoredCredentials();
+      const adminPass = creds['admin'] || creds['admin@psychcare.app'] || '!Inikasijoy1';
+      if (pass !== adminPass) {
         return { success: false, error: 'Incorrect password for admin account.' };
       }
       const users = storage.getUsers();
@@ -185,6 +217,69 @@ class AuthService {
     if (defaultUser) {
       storage.setCurrentUser(defaultUser.id);
     }
+  }
+
+  public async resetPassword(
+    emailInput: string,
+    newPass: string
+  ): Promise<{ success: boolean; error?: string; message?: string }> {
+    const input = emailInput.trim();
+    const normalized = input.toLowerCase();
+
+    if (!input) {
+      return { success: false, error: 'Please enter your registered email address.' };
+    }
+    if (!newPass || newPass.length < 6) {
+      return { success: false, error: 'New password must be at least 6 characters long.' };
+    }
+
+    const users = storage.getUsers();
+    const isAdmin = normalized === 'admin' || normalized === 'admin@psychcare.app';
+    const foundUser = users.find(
+      (u) => u.email.toLowerCase() === normalized || u.name.toLowerCase() === normalized
+    );
+
+    if (!isAdmin && !foundUser) {
+      return { success: false, error: 'No practitioner account found with this email or username.' };
+    }
+
+    if (foundUser && foundUser.status === 'banned') {
+      return { success: false, error: 'This practitioner account is suspended. Contact administration.' };
+    }
+
+    // Try Firebase password reset if online & available
+    if (auth && isFirebaseConfigured() && foundUser?.email) {
+      try {
+        await sendPasswordResetEmail(auth, foundUser.email);
+      } catch (e: any) {
+        console.warn('Firebase sendPasswordResetEmail warning:', e.message);
+      }
+    }
+
+    // Store new password in local credentials
+    const creds = this.getStoredCredentials();
+    if (isAdmin) {
+      creds['admin'] = newPass;
+      creds['admin@psychcare.app'] = newPass;
+    } else if (foundUser) {
+      creds[foundUser.email.toLowerCase()] = newPass;
+    }
+    localStorage.setItem(CREDENTIALS_KEY, JSON.stringify(creds));
+
+    // Also update remembered credentials if this email was remembered
+    const remembered = this.getRememberedCredentials();
+    if (
+      remembered &&
+      (remembered.email.toLowerCase() === normalized ||
+        (foundUser && remembered.email.toLowerCase() === foundUser.email.toLowerCase()))
+    ) {
+      this.saveRememberedCredentials(remembered.email, newPass);
+    }
+
+    return {
+      success: true,
+      message: 'Password reset successfully! You can now log in with your new password.',
+    };
   }
 
   private setSession(active: boolean) {

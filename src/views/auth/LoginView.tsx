@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Brain,
   Lock,
   Mail,
   User,
@@ -10,10 +9,13 @@ import {
   AlertCircle,
   CheckCircle2,
   Smile,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { authService } from '../../services/authService';
 import { AVATAR_CHARACTERS } from '../../services/avatarCharacters';
 import { AvatarPickerModal } from '../../components/AvatarPickerModal';
+import { ForgotPasswordModal } from '../../components/ForgotPasswordModal';
 
 interface LoginViewProps {
   onLoginSuccess: () => void;
@@ -23,6 +25,9 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberPassword, setRememberPassword] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [name, setName] = useState('');
   const [clinicName, setClinicName] = useState('');
   const [licenseNumber, setLicenseNumber] = useState('');
@@ -33,21 +38,28 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
-  // Restore flash message and prefilled email across page reloads
+  // Restore remembered credentials, flash message and prefilled email across page reloads
   useEffect(() => {
     try {
       const flash = sessionStorage.getItem('psychcare_flash_msg');
       const prefillEmail = sessionStorage.getItem('psychcare_prefill_email');
+      const remembered = authService.getRememberedCredentials();
+
       if (flash) {
         setSuccessMsg(flash);
         sessionStorage.removeItem('psychcare_flash_msg');
       }
+
       if (prefillEmail) {
         setEmail(prefillEmail);
         sessionStorage.removeItem('psychcare_prefill_email');
+      } else if (remembered) {
+        setEmail(remembered.email);
+        setPassword(remembered.password);
+        setRememberPassword(true);
       }
     } catch (e) {
-      console.warn('Session storage read error:', e);
+      console.warn('Session/Local storage read error:', e);
     }
   }, []);
 
@@ -103,6 +115,11 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
       setLoading(false);
 
       if (res.success) {
+        if (rememberPassword) {
+          authService.saveRememberedCredentials(email, password);
+        } else {
+          authService.clearRememberedCredentials();
+        }
         onLoginSuccess();
       } else {
         setErrorMsg(res.error || 'Invalid credentials. Please check your username/email & password.');
@@ -119,8 +136,12 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
       <div className="w-full max-w-md bg-slate-900 border border-slate-800/80 rounded-3xl p-4 sm:p-8 shadow-2xl relative z-10 space-y-4 sm:space-y-6 my-auto">
         {/* Brand Header */}
         <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center p-3 bg-gradient-to-tr from-indigo-500 to-teal-400 rounded-2xl shadow-lg shadow-indigo-500/20 mb-1">
-            <Brain className="w-8 h-8 text-white" />
+          <div className="inline-flex items-center justify-center p-2 bg-[#E4E0DA] rounded-3xl shadow-xl shadow-indigo-500/10 mb-1 border border-slate-700/60">
+            <img
+              src="/logo.png"
+              alt="PsychCare Logo"
+              className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-contain shadow-sm"
+            />
           </div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
             PsychCare
@@ -275,15 +296,46 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
             <div className="relative">
               <Lock className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 required
                 placeholder="••••••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-9 pr-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-indigo-500"
+                className="w-full pl-9 pr-10 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-indigo-500"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-3 text-slate-500 hover:text-slate-300 transition cursor-pointer"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
             </div>
           </div>
+
+          {/* Remember Password Checkbox & Forgot Password Link */}
+          {!isSignUp && (
+            <div className="flex items-center justify-between pt-0.5 pb-1">
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={rememberPassword}
+                  onChange={(e) => setRememberPassword(e.target.checked)}
+                  className="w-4 h-4 rounded bg-slate-950 border-slate-700 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-slate-900 cursor-pointer accent-indigo-600"
+                />
+                <span className="text-slate-300 text-xs font-medium">Remember password</span>
+              </label>
+
+              <button
+                type="button"
+                onClick={() => setShowForgotPassword(true)}
+                className="text-xs font-semibold text-indigo-400 hover:text-indigo-300 transition cursor-pointer hover:underline"
+              >
+                Forgot password?
+              </button>
+            </div>
+          )}
 
           <button
             type="submit"
@@ -308,6 +360,20 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
         currentAvatarUrl={selectedAvatar}
         onSelectAvatar={(url) => setSelectedAvatar(url)}
         title="Choose Your Character Avatar"
+      />
+
+      <ForgotPasswordModal
+        isOpen={showForgotPassword}
+        onClose={() => setShowForgotPassword(false)}
+        initialEmail={email}
+        onResetSuccess={(resetEmail, newPass) => {
+          setEmail(resetEmail);
+          setPassword(newPass);
+          setSuccessMsg('Password reset successfully! You can now sign in with your new password.');
+          if (rememberPassword) {
+            authService.saveRememberedCredentials(resetEmail, newPass);
+          }
+        }}
       />
     </div>
   );
