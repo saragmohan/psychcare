@@ -42,6 +42,11 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
   const allAppointments = storage.getAppointments();
   const auditLogs = storage.getAuditLogs();
 
+  const adminClients = storage.getClients('usr_admin');
+  const adminNotes = allNotes.filter((n) => n.psychologistId === 'usr_admin');
+  const adminAssessments = allAssessments.filter((a) => a.psychologistId === 'usr_admin');
+  const adminAppointments = storage.getAppointments('usr_admin');
+
   // Financial Metrics Estimate
   const estimatedMRR = premiumUsers.length * 29;
 
@@ -171,7 +176,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                 Patients & Intake
               </div>
               <div className="text-[10px] text-slate-400">
-                {allClients.length} patient records
+                {adminClients.length} test records
               </div>
             </div>
           </button>
@@ -188,7 +193,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                 SOAP Notes & Voice
               </div>
               <div className="text-[10px] text-slate-400">
-                {allNotes.length} notes & PDF export
+                {adminNotes.length} test notes & PDF
               </div>
             </div>
           </button>
@@ -205,7 +210,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                 PHQ-9 & GAD-7 Tests
               </div>
               <div className="text-[10px] text-slate-400">
-                {allAssessments.length} longitudinal tests
+                {adminAssessments.length} test evaluations
               </div>
             </div>
           </button>
@@ -222,7 +227,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
                 Clinical Calendar
               </div>
               <div className="text-[10px] text-slate-400">
-                {allAppointments.length} scheduled visits
+                {adminAppointments.length} test appointments
               </div>
             </div>
           </button>

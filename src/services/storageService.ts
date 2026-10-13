@@ -40,6 +40,39 @@ class StorageService {
 
     this.checkTrialExpirations();
 
+    // Ensure admin user has dedicated private test workspace data without exposing other practitioners' records
+    if (!this.clients.some((c) => c.psychologistId === 'usr_admin')) {
+      const adminClient = INITIAL_CLIENTS.find((c) => c.psychologistId === 'usr_admin');
+      if (adminClient) {
+        this.clients.push(adminClient);
+        this.save(KEYS.CLIENTS, this.clients);
+      }
+    }
+
+    if (!this.notes.some((n) => n.psychologistId === 'usr_admin')) {
+      const adminNotes = INITIAL_NOTES.filter((n) => n.psychologistId === 'usr_admin');
+      if (adminNotes.length > 0) {
+        this.notes.push(...adminNotes);
+        this.save(KEYS.NOTES, this.notes);
+      }
+    }
+
+    if (!this.assessments.some((a) => a.psychologistId === 'usr_admin')) {
+      const adminAssessments = INITIAL_ASSESSMENTS.filter((a) => a.psychologistId === 'usr_admin');
+      if (adminAssessments.length > 0) {
+        this.assessments.push(...adminAssessments);
+        this.save(KEYS.ASSESSMENTS, this.assessments);
+      }
+    }
+
+    if (!this.appointments.some((a) => a.psychologistId === 'usr_admin')) {
+      const adminAppts = INITIAL_APPOINTMENTS.filter((a) => a.psychologistId === 'usr_admin');
+      if (adminAppts.length > 0) {
+        this.appointments.push(...adminAppts);
+        this.save(KEYS.APPOINTMENTS, this.appointments);
+      }
+    }
+
     // Ensure admin user is synced with name 'admin'
     const adminUser = this.users.find((u) => u.role === 'admin' || u.id === 'usr_admin');
     if (adminUser && adminUser.name !== 'admin') {
@@ -405,10 +438,6 @@ class StorageService {
 
   public getClients(psychologistId?: string): Client[] {
     if (psychologistId) {
-      const user = this.users.find((u) => u.id === psychologistId);
-      if (user?.role === 'admin' || psychologistId === 'usr_admin') {
-        return this.clients;
-      }
       return this.clients.filter((c) => c.psychologistId === psychologistId);
     }
     return this.clients;
@@ -451,10 +480,8 @@ class StorageService {
   }
 
   public getNotesForClient(clientId: string, psychologistId?: string): SessionNote[] {
-    const user = psychologistId ? this.users.find((u) => u.id === psychologistId) : undefined;
-    const isAdmin = user?.role === 'admin' || psychologistId === 'usr_admin';
     return this.notes
-      .filter((n) => n.clientId === clientId && (isAdmin || !psychologistId || n.psychologistId === psychologistId))
+      .filter((n) => n.clientId === clientId && (!psychologistId || n.psychologistId === psychologistId))
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }
 
@@ -484,10 +511,8 @@ class StorageService {
   }
 
   public getAssessmentsForClient(clientId: string, psychologistId?: string): AssessmentResult[] {
-    const user = psychologistId ? this.users.find((u) => u.id === psychologistId) : undefined;
-    const isAdmin = user?.role === 'admin' || psychologistId === 'usr_admin';
     return this.assessments
-      .filter((a) => a.clientId === clientId && (isAdmin || !psychologistId || a.psychologistId === psychologistId))
+      .filter((a) => a.clientId === clientId && (!psychologistId || a.psychologistId === psychologistId))
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   }
 
@@ -505,10 +530,6 @@ class StorageService {
 
   public getAppointments(psychologistId?: string): Appointment[] {
     if (psychologistId) {
-      const user = this.users.find((u) => u.id === psychologistId);
-      if (user?.role === 'admin' || psychologistId === 'usr_admin') {
-        return this.appointments;
-      }
       return this.appointments.filter((a) => a.psychologistId === psychologistId);
     }
     return this.appointments;

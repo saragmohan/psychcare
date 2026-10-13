@@ -193,6 +193,27 @@ export const INITIAL_CLIENTS: Client[] = [
     lastSessionDate: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(),
     totalSessions: 3,
     status: 'active',
+  },
+  {
+    id: 'cli_admin_1',
+    psychologistId: 'usr_admin',
+    fullName: 'Jordan Taylor (Admin Test Patient)',
+    age: 31,
+    gender: 'Non-Binary',
+    phone: '+1 (555) 777-8899',
+    email: 'jordan.taylor@example.com',
+    emergencyContact: {
+      name: 'Morgan Taylor',
+      relationship: 'Partner',
+      phone: '+1 (555) 777-0011',
+    },
+    riskLevel: 'low',
+    primaryDiagnosis: 'Adjustment Disorder with Anxious Mood (F43.22)',
+    notesSummary: 'Test patient profile for administrative feature verification and diagnostic tool evaluation.',
+    createdAt: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+    lastSessionDate: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    totalSessions: 2,
+    status: 'active',
   }
 ];
 
@@ -230,6 +251,23 @@ export const INITIAL_NOTES: SessionNote[] = [
     moodRating: 3,
     isPrivate: false,
     createdAt: new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: 'note_admin_1',
+    clientId: 'cli_admin_1',
+    psychologistId: 'usr_admin',
+    date: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    sessionNumber: 2,
+    soap: {
+      subjective: 'Client reports steady progress with workplace transition and positive response to relaxation drills.',
+      objective: 'Client was calm, engaged, and articulate. Mood rated 7/10. Receptive to diagnostic exploration.',
+      assessment: 'Adjustment reaction resolving as expected with structured support. No risk factors observed.',
+      plan: 'Continue bi-weekly check-ins. Review stress management diary and mindfulness practice.',
+    },
+    dsm5Codes: ['F43.22 Adjustment Disorder with Anxious Mood'],
+    moodRating: 7,
+    isPrivate: false,
+    createdAt: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString(),
   }
 ];
 
@@ -293,6 +331,30 @@ export const INITIAL_ASSESSMENTS: AssessmentResult[] = [
     severity: 'Moderate Depression',
     recommendation: 'Consider treatment plan with CBT, psychotherapy or pharmacotherapy.',
     answers: { 1: 2, 2: 2, 3: 2, 4: 2, 5: 1, 6: 2, 7: 1, 8: 1, 9: 1 }
+  },
+  {
+    id: 'ass_admin_1',
+    clientId: 'cli_admin_1',
+    psychologistId: 'usr_admin',
+    type: 'GAD-7',
+    date: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    totalScore: 10,
+    maxScore: 21,
+    severity: 'Moderate Anxiety',
+    recommendation: 'Targeted relaxation exercises, cognitive reframing, and stress monitoring.',
+    answers: { 1: 2, 2: 2, 3: 1, 4: 1, 5: 2, 6: 1, 7: 1 }
+  },
+  {
+    id: 'ass_admin_2',
+    clientId: 'cli_admin_1',
+    psychologistId: 'usr_admin',
+    type: 'GAD-7',
+    date: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    totalScore: 5,
+    maxScore: 21,
+    severity: 'Mild Anxiety',
+    recommendation: 'Continued maintenance, positive reinforcement, and routine follow-up.',
+    answers: { 1: 1, 2: 1, 3: 1, 4: 0, 5: 1, 6: 1, 7: 0 }
   }
 ];
 
@@ -332,6 +394,18 @@ export const INITIAL_APPOINTMENTS: Appointment[] = [
     type: 'Initial Intake',
     status: 'scheduled',
     notes: 'Session 3 - Comprehensive diagnostic intake assessment.'
+  },
+  {
+    id: 'app_admin_1',
+    clientId: 'cli_admin_1',
+    clientName: 'Jordan Taylor (Admin Test Patient)',
+    psychologistId: 'usr_admin',
+    date: new Date().toISOString().split('T')[0],
+    time: '11:00',
+    durationMinutes: 50,
+    type: 'Telehealth',
+    status: 'scheduled',
+    notes: 'Admin feature verification session - testing calendar scheduling, patient notes, and PDF exports.'
   }
 ];
 
