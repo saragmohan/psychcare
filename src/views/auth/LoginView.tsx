@@ -26,7 +26,6 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberPassword, setRememberPassword] = useState(false);
-  const [hasInteractedWithRemember, setHasInteractedWithRemember] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [name, setName] = useState('');
@@ -39,7 +38,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
-  // Restore remembered credentials, flash message and prefilled email across page reloads
+  // Restore remembered credentials (only if user explicitly clicked remember me), flash message and prefilled email
   useEffect(() => {
     try {
       const flash = sessionStorage.getItem('psychcare_flash_msg');
@@ -54,10 +53,14 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
       if (prefillEmail) {
         setEmail(prefillEmail);
         sessionStorage.removeItem('psychcare_prefill_email');
-      } else if (remembered) {
+      } else if (remembered?.email && remembered?.password) {
         setEmail(remembered.email);
         setPassword(remembered.password);
-        // Default rememberPassword remains false unless user explicitly clicks it
+        setRememberPassword(true);
+      } else {
+        setEmail('');
+        setPassword('');
+        setRememberPassword(false);
       }
     } catch (e) {
       console.warn('Session/Local storage read error:', e);
@@ -118,13 +121,8 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
       if (res.success) {
         if (rememberPassword) {
           authService.saveRememberedCredentials(email, password);
-        } else if (hasInteractedWithRemember) {
-          authService.clearRememberedCredentials();
         } else {
-          const remembered = authService.getRememberedCredentials();
-          if (remembered && remembered.email.toLowerCase() !== email.trim().toLowerCase()) {
-            authService.clearRememberedCredentials();
-          }
+          authService.clearRememberedCredentials();
         }
         onLoginSuccess();
       } else {
@@ -327,10 +325,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                 <input
                   type="checkbox"
                   checked={rememberPassword}
-                  onChange={(e) => {
-                    setRememberPassword(e.target.checked);
-                    setHasInteractedWithRemember(true);
-                  }}
+                  onChange={(e) => setRememberPassword(e.target.checked)}
                   className="w-4 h-4 rounded bg-slate-950 border-slate-700 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-slate-900 cursor-pointer accent-indigo-600"
                 />
                 <span className="text-slate-300 text-xs font-medium">Remember password</span>

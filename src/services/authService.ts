@@ -11,12 +11,17 @@ import { AVATAR_CHARACTERS, getDefaultAvatar } from './avatarCharacters';
 
 const AUTH_KEY = 'psychcare_auth_session_v1';
 const CREDENTIALS_KEY = 'psychcare_user_credentials_v1';
-const REMEMBER_KEY = 'psychcare_remember_credentials_v1';
+const REMEMBER_KEY = 'psychcare_remember_credentials_v2';
 
 class AuthService {
   private authenticated: boolean = false;
 
   constructor() {
+    // Purge legacy auto-saved credentials so login starts clean
+    try {
+      localStorage.removeItem('psychcare_remember_credentials_v1');
+    } catch {}
+
     // Load persisted session from storage
     const session = localStorage.getItem(AUTH_KEY);
     if (session === 'true') {
@@ -51,6 +56,7 @@ class AuthService {
   public clearRememberedCredentials(): void {
     try {
       localStorage.removeItem(REMEMBER_KEY);
+      localStorage.removeItem('psychcare_remember_credentials_v1');
     } catch (e) {
       console.warn('Failed to clear remembered credentials:', e);
     }
