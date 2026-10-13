@@ -93,6 +93,5 @@ We may update this Privacy Policy from time to time. Any changes will be posted 
 
 If you have any questions, concerns, or requests regarding this Privacy Policy or your data privacy, please contact us at:
 
-* **Email:** `support@psychcare.app`
-* **Developer:** PsychCare Clinical Development Team
-* **GitHub Repository:** [https://github.com/saragmohan/psychcare](https://github.com/saragmohan/psychcare)
+* **Support Email:** `support@psychcare.app`
+* **Website:** `https://psychcare.app`
