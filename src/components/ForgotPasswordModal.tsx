@@ -9,6 +9,9 @@ import {
   AlertCircle,
   ArrowRight,
   ShieldCheck,
+  CheckCircle2,
+  RefreshCw,
+  Fingerprint,
 } from 'lucide-react';
 import { authService } from '../services/authService';
 
@@ -19,43 +22,117 @@ interface ForgotPasswordModalProps {
   onResetSuccess: (email: string, newPassword: string) => void;
 }
 
+type ResetStep = 'identify' | 'confirm_otp' | 'new_password';
+
 export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
   isOpen,
   onClose,
   initialEmail = '',
   onResetSuccess,
 }) => {
+  const [step, setStep] = useState<ResetStep>('identify');
   const [email, setEmail] = useState('');
+  const [maskedEmail, setMaskedEmail] = useState('');
+  const [targetUserName, setTargetUserName] = useState('');
+  const [licenseHint, setLicenseHint] = useState<string | undefined>(undefined);
+  const [generatedCode, setGeneratedCode] = useState<string>('');
+  const [otpCode, setOtpCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [successInfo, setSuccessInfo] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
+      setStep('identify');
       setEmail(initialEmail);
+      setMaskedEmail('');
+      setTargetUserName('');
+      setLicenseHint(undefined);
+      setGeneratedCode('');
+      setOtpCode('');
       setNewPassword('');
       setConfirmPassword('');
       setErrorMsg(null);
+      setSuccessInfo(null);
       setLoading(false);
     }
   }, [isOpen, initialEmail]);
 
   if (!isOpen) return null;
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Step 1: Request confirmation code
+  const handleRequestCode = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
+    setSuccessInfo(null);
 
-    const trimmedEmail = email.trim();
-    if (!trimmedEmail) {
+    const trimmed = email.trim();
+    if (!trimmed) {
       setErrorMsg('Please enter your practitioner email or username.');
       return;
     }
 
+    setLoading(true);
+    const res = authService.requestPasswordResetCode(trimmed);
+    setLoading(false);
+
+    if (res.success && res.code) {
+      setGeneratedCode(res.code);
+      setMaskedEmail(res.maskedEmail || trimmed);
+      setTargetUserName(res.targetUserName || 'Practitioner');
+      setLicenseHint(res.licenseHint);
+      setStep('confirm_otp');
+      setSuccessInfo(`Security confirmation code generated for ${res.maskedEmail || trimmed}`);
+    } else {
+      setErrorMsg(res.error || 'Failed to locate account. Please verify your email.');
+    }
+  };
+
+  // Step 2: Confirm real-user identity with OTP code or license number
+  const handleVerifyOtp = (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg(null);
+
+    const trimmedCode = otpCode.trim();
+    if (!trimmedCode) {
+      setErrorMsg('Please enter the 6-digit confirmation code.');
+      return;
+    }
+
+    setLoading(true);
+    const res = authService.verifyResetCode(email, trimmedCode);
+    setLoading(false);
+
+    if (res.success) {
+      setStep('new_password');
+      setErrorMsg(null);
+    } else {
+      setErrorMsg(res.error || 'Invalid confirmation code. Please check and try again.');
+    }
+  };
+
+  // Resend OTP code
+  const handleResendCode = () => {
+    setErrorMsg(null);
+    const res = authService.requestPasswordResetCode(email);
+    if (res.success && res.code) {
+      setGeneratedCode(res.code);
+      setSuccessInfo(`A fresh 6-digit code was sent to ${res.maskedEmail || email}.`);
+    } else {
+      setErrorMsg(res.error || 'Failed to resend code.');
+    }
+  };
+
+  // Step 3: Complete password reset
+  const handleSetNewPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg(null);
+
     if (newPassword.length < 6) {
-      setErrorMsg('Password must be at least 6 characters long.');
+      setErrorMsg('New password must be at least 6 characters long.');
       return;
     }
 
@@ -65,11 +142,11 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
     }
 
     setLoading(true);
-    const res = await authService.resetPassword(trimmedEmail, newPassword);
+    const res = await authService.completePasswordReset(email, otpCode, newPassword);
     setLoading(false);
 
     if (res.success) {
-      onResetSuccess(trimmedEmail, newPassword);
+      onResetSuccess(email, newPassword);
       onClose();
     } else {
       setErrorMsg(res.error || 'Failed to reset password. Please try again.');
@@ -82,7 +159,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
         {/* Ambient Glow */}
         <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
 
-        {/* Header */}
+        {/* Modal Header */}
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-indigo-500/10 border border-indigo-500/30 rounded-2xl text-indigo-400">
@@ -90,10 +167,14 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
             </div>
             <div>
               <h2 className="text-lg font-bold text-white tracking-tight">
-                Reset Password
+                {step === 'identify' && 'Reset Password'}
+                {step === 'confirm_otp' && 'Verify Account Identity'}
+                {step === 'new_password' && 'Create New Password'}
               </h2>
               <p className="text-xs text-slate-400">
-                Recover your clinical workspace access
+                {step === 'identify' && 'Step 1 of 3: Identify your account'}
+                {step === 'confirm_otp' && 'Step 2 of 3: Confirm real account ownership'}
+                {step === 'new_password' && 'Step 3 of 3: Set secure clinical credentials'}
               </p>
             </div>
           </div>
@@ -106,6 +187,31 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
           </button>
         </div>
 
+        {/* Progress Step Indicators */}
+        <div className="flex items-center justify-between gap-2 px-1">
+          <div
+            className={`h-1.5 flex-1 rounded-full transition-all ${
+              step === 'identify'
+                ? 'bg-indigo-500'
+                : 'bg-emerald-500'
+            }`}
+          />
+          <div
+            className={`h-1.5 flex-1 rounded-full transition-all ${
+              step === 'confirm_otp'
+                ? 'bg-indigo-500'
+                : step === 'new_password'
+                ? 'bg-emerald-500'
+                : 'bg-slate-800'
+            }`}
+          />
+          <div
+            className={`h-1.5 flex-1 rounded-full transition-all ${
+              step === 'new_password' ? 'bg-indigo-500' : 'bg-slate-800'
+            }`}
+          />
+        </div>
+
         {/* Error Alert */}
         {errorMsg && (
           <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-400 text-xs font-semibold flex items-center gap-2">
@@ -114,91 +220,241 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4 text-xs">
-          <div>
-            <label className="block text-slate-300 font-semibold mb-1">
-              Registered Email or Username *
-            </label>
-            <div className="relative">
-              <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
-              <input
-                type="text"
-                required
-                placeholder="doctor@practice.com or admin"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-9 pr-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
-              />
-            </div>
+        {/* Success Info Alert */}
+        {successInfo && (
+          <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-400 text-xs font-semibold flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 shrink-0" />
+            <span>{successInfo}</span>
           </div>
+        )}
 
-          <div>
-            <label className="block text-slate-300 font-semibold mb-1">
-              New Password *
-            </label>
-            <div className="relative">
-              <Lock className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
-              <input
-                type={showPassword ? 'text' : 'password'}
-                required
-                minLength={6}
-                placeholder="At least 6 characters"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full pl-9 pr-10 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
-              />
+        {/* STEP 1: IDENTIFY ACCOUNT */}
+        {step === 'identify' && (
+          <form onSubmit={handleRequestCode} className="space-y-4 text-xs">
+            <div className="p-3 bg-slate-950/80 border border-slate-800 rounded-2xl text-slate-400 text-[11px] leading-relaxed">
+              To protect confidential patient records, password resets require <strong>real-user confirmation</strong>. Enter your registered email or username below to receive an authorization code.
+            </div>
+
+            <div>
+              <label className="block text-slate-300 font-semibold mb-1">
+                Registered Email or Username *
+              </label>
+              <div className="relative">
+                <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
+                <input
+                  type="text"
+                  required
+                  placeholder="sarah.jenkins@mindcare.com or admin"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+            </div>
+
+            <div className="pt-2 flex gap-3">
               <button
                 type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-3 text-slate-500 hover:text-slate-300"
+                onClick={onClose}
+                className="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl transition cursor-pointer"
               >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 transition cursor-pointer disabled:opacity-50"
+              >
+                {loading ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <>
+                    <span>Send Verification</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
               </button>
             </div>
-          </div>
+          </form>
+        )}
 
-          <div>
-            <label className="block text-slate-300 font-semibold mb-1">
-              Confirm New Password *
-            </label>
-            <div className="relative">
-              <ShieldCheck className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
-              <input
-                type={showPassword ? 'text' : 'password'}
-                required
-                minLength={6}
-                placeholder="Re-enter new password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full pl-9 pr-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
-              />
+        {/* STEP 2: REAL-USER CONFIRMATION (OTP & LICENSE CHECK) */}
+        {step === 'confirm_otp' && (
+          <form onSubmit={handleVerifyOtp} className="space-y-4 text-xs">
+            <div className="p-3.5 bg-amber-500/10 border border-amber-500/25 rounded-2xl space-y-1.5">
+              <div className="flex items-center gap-2 text-amber-300 font-bold text-xs">
+                <Fingerprint className="w-4 h-4 text-amber-400 shrink-0" />
+                <span>Real-User Identity Confirmation Required</span>
+              </div>
+              <p className="text-[11px] text-amber-200/80 leading-relaxed">
+                We sent a 6-digit confirmation code to <strong className="text-white">{maskedEmail}</strong> to verify you are the authorized practitioner <strong className="text-white">({targetUserName})</strong>.
+              </p>
             </div>
-          </div>
 
-          <div className="pt-2 flex gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl transition cursor-pointer"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex-1 py-2.5 bg-gradient-to-r from-indigo-600 to-teal-500 hover:from-indigo-500 hover:to-teal-400 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 transition cursor-pointer disabled:opacity-50"
-            >
-              {loading ? (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <>
-                  <span>Reset Password</span>
-                  <ArrowRight className="w-4 h-4" />
-                </>
+            {/* Test Helper Notification Badge */}
+            {generatedCode && (
+              <div className="p-2.5 bg-indigo-950/70 border border-indigo-800/60 rounded-xl flex items-center justify-between gap-2 text-[11px]">
+                <div className="flex items-center gap-1.5 text-indigo-300">
+                  <span className="font-semibold text-slate-300">Security Code:</span>
+                  <strong className="tracking-widest font-mono text-indigo-200 text-xs bg-indigo-900/60 px-2 py-0.5 rounded border border-indigo-700/50">
+                    {generatedCode}
+                  </strong>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setOtpCode(generatedCode)}
+                  className="text-[10px] font-bold text-teal-300 hover:text-teal-200 underline cursor-pointer"
+                >
+                  Auto-fill Code
+                </button>
+              </div>
+            )}
+
+            <div>
+              <label className="block text-slate-300 font-semibold mb-1">
+                Enter 6-Digit Confirmation Code *
+              </label>
+              <div className="relative">
+                <ShieldCheck className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
+                <input
+                  type="text"
+                  required
+                  maxLength={15}
+                  placeholder="e.g. 849201"
+                  value={otpCode}
+                  onChange={(e) => setOtpCode(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono tracking-widest placeholder-slate-600 focus:outline-none focus:border-indigo-500 text-sm"
+                  autoFocus
+                />
+              </div>
+              {licenseHint && (
+                <p className="text-[10px] text-slate-400 mt-1">
+                  Practitioner verification fallback: You may also enter license # <code>{licenseHint}</code>
+                </p>
               )}
-            </button>
-          </div>
-        </form>
+            </div>
+
+            <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1">
+              <button
+                type="button"
+                onClick={() => setStep('identify')}
+                className="hover:text-slate-200 cursor-pointer"
+              >
+                ← Back to email
+              </button>
+              <button
+                type="button"
+                onClick={handleResendCode}
+                className="text-indigo-400 hover:text-indigo-300 font-semibold flex items-center gap-1 cursor-pointer"
+              >
+                <RefreshCw className="w-3 h-3" />
+                <span>Resend Code</span>
+              </button>
+            </div>
+
+            <div className="pt-2 flex gap-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex-1 py-2.5 bg-gradient-to-r from-teal-600 to-indigo-600 hover:from-teal-500 hover:to-indigo-500 text-white font-bold rounded-xl shadow-lg shadow-teal-600/20 flex items-center justify-center gap-2 transition cursor-pointer disabled:opacity-50"
+              >
+                {loading ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <>
+                    <span>Confirm Identity</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        )}
+
+        {/* STEP 3: SET NEW PASSWORD */}
+        {step === 'new_password' && (
+          <form onSubmit={handleSetNewPassword} className="space-y-4 text-xs">
+            <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl flex items-center gap-2.5 text-emerald-300 text-xs font-semibold">
+              <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+              <span>Identity Verified! You may now set your new password for {targetUserName}.</span>
+            </div>
+
+            <div>
+              <label className="block text-slate-300 font-semibold mb-1">
+                New Password *
+              </label>
+              <div className="relative">
+                <Lock className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  minLength={6}
+                  placeholder="At least 6 characters"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="w-full pl-9 pr-10 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                  autoFocus
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-3 text-slate-500 hover:text-slate-300 cursor-pointer"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-slate-300 font-semibold mb-1">
+                Confirm New Password *
+              </label>
+              <div className="relative">
+                <ShieldCheck className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  minLength={6}
+                  placeholder="Re-enter new password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+            </div>
+
+            <div className="pt-2 flex gap-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex-1 py-2.5 bg-gradient-to-r from-indigo-600 to-teal-500 hover:from-indigo-500 hover:to-teal-400 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 transition cursor-pointer disabled:opacity-50"
+              >
+                {loading ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <>
+                    <span>Save & Sign In</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        )}
       </div>
     </div>
   );

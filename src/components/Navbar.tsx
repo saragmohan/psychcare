@@ -10,10 +10,12 @@ import {
   ShieldCheck,
   Smile,
   CreditCard,
+  KeyRound,
 } from 'lucide-react';
 import type { User } from '../types';
 import { storage } from '../services/storageService';
 import { AvatarPickerModal } from './AvatarPickerModal';
+import { ProfilePasswordModal } from './ProfilePasswordModal';
 
 interface NavbarProps {
   currentUser: User;
@@ -33,6 +35,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [trialTime, setTrialTime] = useState(storage.getTrialTimeRemaining(currentUser));
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -393,6 +396,18 @@ export const Navbar: React.FC<NavbarProps> = ({
                       type="button"
                       onClick={() => {
                         setShowRoleDropdown(false);
+                        setShowPasswordModal(true);
+                      }}
+                      className="w-full text-left px-3 py-2 text-slate-300 hover:bg-slate-800 rounded-xl transition flex items-center gap-2.5 text-xs font-semibold cursor-pointer"
+                    >
+                      <KeyRound className="w-4 h-4 text-amber-400 shrink-0" />
+                      <span>Change / Reset Password</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowRoleDropdown(false);
                         onLogout();
                       }}
                       className="w-full text-left px-3 py-2 text-rose-400 hover:bg-rose-950/40 rounded-xl transition flex items-center gap-2.5 text-xs font-semibold cursor-pointer"
@@ -416,6 +431,12 @@ export const Navbar: React.FC<NavbarProps> = ({
         onSelectAvatar={(avatarUrl) => {
           storage.updateUserAvatar(currentUser.id, avatarUrl);
         }}
+      />
+
+      <ProfilePasswordModal
+        isOpen={showPasswordModal}
+        onClose={() => setShowPasswordModal(false)}
+        currentUser={currentUser}
       />
     </header>
   );

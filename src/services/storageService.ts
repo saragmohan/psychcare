@@ -414,7 +414,7 @@ class StorageService {
     return true;
   }
 
-  private addAuditLog(
+  public addAuditLog(
     adminId: string,
     adminName: string,
     action: string,
