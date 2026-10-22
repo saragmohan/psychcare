@@ -7,6 +7,7 @@ import { ClientsView } from './views/psychologist/ClientsView';
 import { NotesView } from './views/psychologist/NotesView';
 import { AssessmentsView } from './views/psychologist/AssessmentsView';
 import { AppointmentsView } from './views/psychologist/AppointmentsView';
+import { BillingView } from './views/psychologist/BillingView';
 import { AdminDashboardView } from './views/admin/AdminDashboardView';
 import { UserManagementView } from './views/admin/UserManagementView';
 import { AuditLogsView } from './views/admin/AuditLogsView';
@@ -131,6 +132,13 @@ export default function App() {
             currentUser={currentUser}
             setActiveTab={setActiveTab}
             onSelectClient={handleSelectClient}
+          />
+        )}
+
+        {activeTab === 'billing' && (
+          <BillingView
+            currentUser={currentUser}
+            onOpenPaywall={() => setIsPaywallOpen(true)}
           />
         )}
 

@@ -1,4 +1,4 @@
-import type { User, Client, SessionNote, AssessmentResult, Appointment, AdminAuditLog } from '../types';
+import type { User, Client, SessionNote, AssessmentResult, Appointment, AdminAuditLog, PaymentInvoice, WebCheckoutPayload } from '../types';
 import {
   INITIAL_USERS,
   INITIAL_CLIENTS,
@@ -6,6 +6,7 @@ import {
   INITIAL_ASSESSMENTS,
   INITIAL_APPOINTMENTS,
   INITIAL_AUDIT_LOGS,
+  INITIAL_INVOICES,
 } from './mockData';
 import { getDefaultAvatar } from './avatarCharacters';
 
@@ -17,6 +18,7 @@ const KEYS = {
   ASSESSMENTS: 'psychcare_assessments_v1',
   APPOINTMENTS: 'psychcare_appointments_v1',
   LOGS: 'psychcare_logs_v1',
+  INVOICES: 'psychcare_invoices_v1',
 };
 
 class StorageService {
@@ -27,6 +29,7 @@ class StorageService {
   private assessments: AssessmentResult[];
   private appointments: Appointment[];
   private logs: AdminAuditLog[];
+  private invoices: PaymentInvoice[];
   private listeners: (() => void)[] = [];
 
   constructor() {
@@ -37,6 +40,7 @@ class StorageService {
     this.assessments = this.load(KEYS.ASSESSMENTS, INITIAL_ASSESSMENTS);
     this.appointments = this.load(KEYS.APPOINTMENTS, INITIAL_APPOINTMENTS);
     this.logs = this.load(KEYS.LOGS, INITIAL_AUDIT_LOGS);
+    this.invoices = this.load(KEYS.INVOICES, INITIAL_INVOICES);
 
     this.checkTrialExpirations();
 
@@ -679,6 +683,108 @@ class StorageService {
       return true;
     }
     return false;
+  }
+
+  public getInvoices(userId?: string): PaymentInvoice[] {
+    if (userId) {
+      return this.invoices.filter((inv) => inv.userId === userId);
+    }
+    return this.invoices;
+  }
+
+  public getInvoiceById(id: string): PaymentInvoice | undefined {
+    return this.invoices.find((inv) => inv.id === id);
+  }
+
+  public processWebSubscription(
+    userId: string,
+    payload: WebCheckoutPayload
+  ): { success: boolean; invoice: PaymentInvoice } {
+    const targetUser = this.users.find((u) => u.id === userId) || this.getCurrentUser();
+    const daysValid = payload.billingCycle === 'yearly' ? 365 : 30;
+    const expiry = new Date(Date.now() + daysValid * 24 * 60 * 60 * 1000).toISOString();
+    const amount = payload.billingCycle === 'yearly' ? 249 : 29;
+
+    const invoiceId = `INV-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`;
+
+    const last4 = payload.cardNumber ? payload.cardNumber.replace(/\s+/g, '').slice(-4) : '4242';
+    const brand = payload.paymentMethodType === 'card' ? 'Visa' : undefined;
+
+    const newInvoice: PaymentInvoice = {
+      id: invoiceId,
+      userId: targetUser.id,
+      userName: targetUser.name,
+      userEmail: targetUser.email,
+      planName: `PsychCare Premium Pro (${payload.billingCycle === 'yearly' ? 'Annual' : 'Monthly'})`,
+      billingCycle: payload.billingCycle,
+      amount,
+      currency: 'USD',
+      date: new Date().toISOString(),
+      paymentMethod: {
+        type: payload.paymentMethodType,
+        last4: payload.paymentMethodType === 'card' ? last4 : undefined,
+        brand: brand,
+        upiId: payload.upiId,
+      },
+      status: 'paid',
+    };
+
+    // Update user plan to premium
+    this.users = this.users.map((u) => {
+      if (u.id === targetUser.id) {
+        return {
+          ...u,
+          plan: 'premium',
+          premiumExpiresAt: expiry,
+        };
+      }
+      return u;
+    });
+
+    // Save invoice
+    this.invoices = [newInvoice, ...this.invoices];
+    this.save(KEYS.INVOICES, this.invoices);
+    this.save(KEYS.USERS, this.users);
+
+    this.addAuditLog(
+      targetUser.id,
+      targetUser.name,
+      'PAYMENT_SUCCESS',
+      targetUser.id,
+      targetUser.name,
+      `Successfully processed web payment of $${amount} USD for ${newInvoice.planName} (Invoice: ${invoiceId}).`
+    );
+
+    return { success: true, invoice: newInvoice };
+  }
+
+  public cancelSubscription(userId: string): boolean {
+    const targetUser = this.users.find((u) => u.id === userId);
+    if (!targetUser) return false;
+
+    this.users = this.users.map((u) => {
+      if (u.id === userId) {
+        return {
+          ...u,
+          plan: 'free',
+          premiumExpiresAt: undefined,
+        };
+      }
+      return u;
+    });
+
+    this.save(KEYS.USERS, this.users);
+
+    this.addAuditLog(
+      targetUser.id,
+      targetUser.name,
+      'CANCEL_SUBSCRIPTION',
+      targetUser.id,
+      targetUser.name,
+      'Practitioner cancelled their Premium Pro subscription. Reverted to Free plan.'
+    );
+
+    return true;
   }
 
   public updateUserAvatar(userId: string, avatarUrl: string): boolean {

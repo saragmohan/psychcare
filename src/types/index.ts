@@ -110,3 +110,40 @@ export interface AdminAuditLog {
   targetUserName: string;
   details: string;
 }
+
+export type PaymentMethodType = 'card' | 'upi' | 'paypal' | 'netbanking';
+
+export interface PaymentInvoice {
+  id: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  planName: string;
+  billingCycle: 'monthly' | 'yearly';
+  amount: number;
+  currency: string;
+  date: string;
+  paymentMethod: {
+    type: PaymentMethodType;
+    last4?: string;
+    brand?: string;
+    upiId?: string;
+  };
+  status: 'paid' | 'refunded' | 'failed';
+}
+
+export interface WebCheckoutPayload {
+  billingCycle: 'monthly' | 'yearly';
+  paymentMethodType: PaymentMethodType;
+  cardNumber?: string;
+  cardName?: string;
+  cardExpiry?: string;
+  cardCvc?: string;
+  upiId?: string;
+  billingAddress?: {
+    line1?: string;
+    city?: string;
+    country?: string;
+    postalCode?: string;
+  };
+}

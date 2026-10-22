@@ -9,6 +9,7 @@ import {
   Building,
   ShieldCheck,
   Smile,
+  CreditCard,
 } from 'lucide-react';
 import type { User } from '../types';
 import { storage } from '../services/storageService';
@@ -147,6 +148,16 @@ export const Navbar: React.FC<NavbarProps> = ({
                 }`}
               >
                 Calendar
+              </button>
+              <button
+                onClick={() => setActiveTab('billing')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  activeTab === 'billing'
+                    ? 'bg-indigo-600 text-white shadow-md'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Billing & Plans
               </button>
             </nav>
           )}
@@ -361,6 +372,20 @@ export const Navbar: React.FC<NavbarProps> = ({
                       >
                         <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
                         <span>Upgrade to Premium Pro</span>
+                      </button>
+                    )}
+
+                    {currentUser.role === 'psychologist' && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowRoleDropdown(false);
+                          setActiveTab('billing');
+                        }}
+                        className="w-full text-left px-3 py-2 text-slate-300 hover:bg-slate-800 rounded-xl transition flex items-center gap-2.5 text-xs font-semibold cursor-pointer"
+                      >
+                        <CreditCard className="w-4 h-4 text-indigo-400 shrink-0" />
+                        <span>Billing & Invoices</span>
                       </button>
                     )}
 

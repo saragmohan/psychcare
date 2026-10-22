@@ -1,4 +1,4 @@
-import type { User, Client, SessionNote, AssessmentResult, Appointment, AdminAuditLog } from '../types';
+import type { User, Client, SessionNote, AssessmentResult, Appointment, AdminAuditLog, PaymentInvoice } from '../types';
 import { AVATAR_CHARACTERS } from './avatarCharacters';
 
 const now = new Date();
@@ -429,5 +429,25 @@ export const INITIAL_AUDIT_LOGS: AdminAuditLog[] = [
     targetUserId: 'usr_psy_1',
     targetUserName: 'Dr. Sarah Jenkins, PsyD',
     details: 'Extended trial by 3 days upon request',
+  }
+];
+
+export const INITIAL_INVOICES: PaymentInvoice[] = [
+  {
+    id: 'INV-2026-0891',
+    userId: 'usr_psy_2',
+    userName: 'Dr. Marcus Vance, PhD',
+    userEmail: 'marcus.vance@therapy.org',
+    planName: 'PsychCare Premium Pro (Annual)',
+    billingCycle: 'yearly',
+    amount: 249,
+    currency: 'USD',
+    date: new Date(now.getTime() - 25 * 24 * 60 * 60 * 1000).toISOString(),
+    paymentMethod: {
+      type: 'card',
+      last4: '4242',
+      brand: 'Visa'
+    },
+    status: 'paid'
   }
 ];
