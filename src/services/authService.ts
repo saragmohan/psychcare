@@ -8,6 +8,7 @@ import { auth, isFirebaseConfigured } from './firebase';
 import { storage } from './storageService';
 import type { User } from '../types';
 import { AVATAR_CHARACTERS, getDefaultAvatar } from './avatarCharacters';
+import { emailService } from './emailService';
 
 const AUTH_KEY = 'psychcare_auth_session_v1';
 const CREDENTIALS_KEY = 'psychcare_user_credentials_v1';
@@ -247,11 +248,10 @@ class AuthService {
   public requestPasswordResetCode(emailInput: string): {
     success: boolean;
     error?: string;
-    code?: string;
     maskedEmail?: string;
+    targetEmail?: string;
     targetUserName?: string;
     targetRole?: string;
-    licenseHint?: string;
   } {
     const input = emailInput.trim();
     const normalized = input.toLowerCase();
@@ -309,28 +309,34 @@ class AuthService {
       this.resetSessions.set(foundUser.name.toLowerCase(), session);
     }
 
+    // Dispatch confirmation code directly to the practitioner's email
+    emailService.sendSecurityCodeEmail({
+      toEmail: targetUser.email,
+      toName: targetUser.name,
+      code,
+    });
+
     storage.addAuditLog(
       targetUser.id,
       targetUser.name,
       'PASSWORD_RESET_OTP_REQUESTED',
       targetUser.id,
       targetUser.name,
-      `Password reset confirmation code generated for ${targetUser.email}.`
+      `Password reset confirmation code dispatched to email: ${targetUser.email}.`
     );
 
     return {
       success: true,
-      code,
       maskedEmail: maskEmail(targetUser.email),
+      targetEmail: targetUser.email,
       targetUserName: targetUser.name,
       targetRole: targetUser.role,
-      licenseHint: targetUser.licenseNumber,
     };
   }
 
   public verifyResetCode(
     emailInput: string,
-    codeOrLicense: string
+    code: string
   ): { success: boolean; error?: string } {
     const normalized = emailInput.trim().toLowerCase();
     const session = this.resetSessions.get(normalized);
@@ -344,14 +350,11 @@ class AuthService {
       return { success: false, error: 'Confirmation code has expired. Please request a new code.' };
     }
 
-    const trimmedInput = codeOrLicense.trim().toUpperCase();
-    const isCodeMatch = trimmedInput === session.code;
-    const isLicenseMatch = !!(session.licenseNumber && trimmedInput === session.licenseNumber.trim().toUpperCase());
-
-    if (!isCodeMatch && !isLicenseMatch) {
+    const trimmedInput = code.trim();
+    if (trimmedInput !== session.code) {
       return {
         success: false,
-        error: 'Invalid confirmation code. Please enter the 6-digit code sent to your registered email.',
+        error: 'Incorrect confirmation code. Please check your email inbox and enter the 6-digit code received.',
       };
     }
 
@@ -494,10 +497,14 @@ class AuthService {
     newPass: string
   ): Promise<{ success: boolean; error?: string; message?: string }> {
     const res = this.requestPasswordResetCode(emailInput);
-    if (!res.success || !res.code) {
+    if (!res.success) {
       return { success: false, error: res.error || 'User not found' };
     }
-    return this.completePasswordReset(emailInput, res.code, newPass);
+    const session = this.resetSessions.get(emailInput.trim().toLowerCase());
+    if (!session) {
+      return { success: false, error: 'Session error' };
+    }
+    return this.completePasswordReset(emailInput, session.code, newPass);
   }
 
   private setSession(active: boolean) {

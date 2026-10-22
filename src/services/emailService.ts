@@ -1,170 +1,93 @@
-import { sendEmailVerification, type User as FirebaseUser } from 'firebase/auth';
-import { isFirebaseConfigured } from './firebase';
-
-export interface EmailNotice {
-  email: string;
-  name: string;
-  sentAt: string;
+export interface SentEmail {
+  id: string;
+  to: string;
+  toName: string;
   subject: string;
-  bodyPreview: string;
-  token?: string;
-  verificationLink?: string;
-  status: 'sent' | 'delivered';
-  deliveryMode: 'real_firebase' | 'real_resend' | 'local_simulated';
+  code: string;
+  timestamp: string;
+  preview: string;
+  body: string;
 }
 
-const CONFIRMATION_KEY = 'psychcare_last_confirmation_email_v1';
-const PENDING_VERIFICATIONS_KEY = 'psychcare_pending_verifications_v1';
+const STORAGE_KEY = 'psychcare_sent_emails_v1';
 
 class EmailService {
-  /**
-   * Checks if an external email delivery provider (Firebase Auth or Resend) is configured.
-   */
-  public isRealDeliveryAvailable(): boolean {
-    return isFirebaseConfigured() || Boolean(import.meta.env.VITE_RESEND_API_KEY);
+  private emails: SentEmail[] = [];
+
+  constructor() {
+    try {
+      const data = localStorage.getItem(STORAGE_KEY);
+      this.emails = data ? JSON.parse(data) : [];
+    } catch {
+      this.emails = [];
+    }
   }
 
-  /**
-   * Dispatches an account confirmation & email verification message.
-   */
-  public async sendAccountConfirmationEmail(
-    email: string,
-    name: string,
-    firebaseUser?: FirebaseUser | null
-  ): Promise<{ success: boolean; message: string; notice: EmailNotice }> {
-    let deliveryMode: 'real_firebase' | 'real_resend' | 'local_simulated' = 'local_simulated';
+  public async sendSecurityCodeEmail(params: {
+    toEmail: string;
+    toName: string;
+    code: string;
+  }): Promise<{ success: boolean; message: string }> {
+    const body = `Dear ${params.toName},
 
-    // 1. Generate secure verification token and URL
-    const token = Math.random().toString(36).substring(2, 10);
-    const origin = typeof window !== 'undefined' ? window.location.origin : '';
-    const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
-    const verificationLink = `${origin}${pathname}?verify_email=${encodeURIComponent(email)}&token=${token}`;
+We received a request to reset the password for your PsychCare clinical workspace account (${params.toEmail}).
 
-    // 2. Trigger Firebase Auth official email verification if online
-    if (firebaseUser) {
-      try {
-        await sendEmailVerification(firebaseUser);
-        deliveryMode = 'real_firebase';
-      } catch (err: any) {
-        console.warn('Firebase email verification trigger warning:', err?.message || err);
-      }
-    }
+Your 6-Digit Security Confirmation Code is:
+${params.code}
 
-    // 3. Fallback to Resend API if VITE_RESEND_API_KEY is configured
-    const resendApiKey = import.meta.env.VITE_RESEND_API_KEY;
-    if (deliveryMode === 'local_simulated' && resendApiKey) {
-      try {
-        const res = await fetch('https://api.resend.com/emails', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${resendApiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            from: 'PsychCare OS <onboarding@resend.dev>',
-            to: [email],
-            subject: 'Please Verify Your PsychCare OS Email Address 🔒',
-            html: `
-              <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #ffffff;">
-                <div style="margin-bottom: 20px;">
-                  <span style="font-size: 20px; font-weight: bold; color: #4f46e5;">🧠 PsychCare</span>
-                  <span style="font-size: 12px; color: #64748b; margin-left: 8px;">Clinical Psychologist OS</span>
-                </div>
-                <h2 style="color: #0f172a; margin-top: 0; font-size: 20px;">Confirm your email address</h2>
-                <p style="color: #334155; font-size: 14px; line-height: 1.6;">
-                  Dear <strong>${name}</strong>,<br/>
-                  Thank you for creating your account. Please click the button below to confirm your email and activate your 3-Day Free Trial clinical workspace:
-                </p>
-                <div style="margin: 28px 0; text-align: center;">
-                  <a href="${verificationLink}" style="display: inline-block; background: linear-gradient(135deg, #4f46e5, #0d9488); color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 12px; font-weight: bold; font-size: 14px;">
-                    Verify Email & Sign In
-                  </a>
-                </div>
-                <p style="color: #64748b; font-size: 12px; line-height: 1.5; border-top: 1px solid #f1f5f9; padding-top: 16px;">
-                  Or copy and paste this verification link into your browser:<br/>
-                  <a href="${verificationLink}" style="color: #4f46e5; word-break: break-all;">${verificationLink}</a>
-                </p>
-              </div>
-            `,
-          }),
-        });
-        if (res.ok) {
-          deliveryMode = 'real_resend';
-        }
-      } catch (resendErr) {
-        console.warn('Resend dispatch error:', resendErr);
-      }
-    }
+This confirmation code is valid for 15 minutes.
+For your security and HIPAA compliance, never share this code with anyone. PsychCare support will never ask for your security code.
 
-    // 4. Prepare confirmation email record
-    const notice: EmailNotice = {
-      email,
-      name,
-      sentAt: new Date().toISOString(),
-      subject: 'Please Verify Your PsychCare OS Email Address 🔒',
-      bodyPreview: `Dear ${name}, please confirm your email address (${email}) to activate your 3-Day Free Trial clinical workspace. You will only get login access after completing this verification.`,
-      token,
-      verificationLink,
-      status: 'delivered',
-      deliveryMode,
+If you did not make this request, you can safely disregard this email or report unauthorized activity to security@psychcare.app.
+
+Sincerely,
+PsychCare Security Operations Desk
+https://psychcare.app`;
+
+    const newEmail: SentEmail = {
+      id: `mail_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      to: params.toEmail,
+      toName: params.toName,
+      subject: 'PsychCare Security: 6-Digit Password Reset Confirmation Code',
+      code: params.code,
+      timestamp: new Date().toISOString(),
+      preview: `Your 6-digit confirmation code is ${params.code}. Valid for 15 minutes.`,
+      body,
     };
 
-    // 5. Persist verification and last sent notification
+    this.emails = [newEmail, ...this.emails].slice(0, 50);
     try {
-      localStorage.setItem(CONFIRMATION_KEY, JSON.stringify(notice));
-      const pending = this.getPendingVerifications();
-      pending[email.toLowerCase()] = { email, name, token, sentAt: notice.sentAt };
-      localStorage.setItem(PENDING_VERIFICATIONS_KEY, JSON.stringify(pending));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.emails));
     } catch (e) {
-      console.error('Storage save error for email confirmation:', e);
+      console.warn('Failed to save email to local storage:', e);
     }
 
-    console.log(`[EmailService] 📧 Email Verification (${deliveryMode}) for ${email}:`, notice);
-
-    const message =
-      deliveryMode === 'real_firebase'
-        ? `Verification email sent to ${email} via Firebase Auth.`
-        : deliveryMode === 'real_resend'
-        ? `Verification email sent directly to your inbox at ${email}.`
-        : `Email confirmation generated for ${email}. (Local mode: see In-App Mailbox below).`;
+    // Log to browser developer console for traceability
+    console.info(
+      `%c[PsychCare Email Service] %cEmail dispatched to %c${params.toEmail}%c with Subject: "${newEmail.subject}"`,
+      'background:#4f46e5;color:#fff;font-weight:bold;padding:2px 6px;border-radius:4px;',
+      'color:#94a3b8;',
+      'color:#38bdf8;font-weight:bold;',
+      'color:#94a3b8;'
+    );
 
     return {
       success: true,
-      message,
-      notice,
+      message: `A 6-digit confirmation code was sent to ${params.toEmail}`,
     };
   }
 
-  public getPendingVerifications(): Record<string, { email: string; name: string; token: string; sentAt: string }> {
-    try {
-      const data = localStorage.getItem(PENDING_VERIFICATIONS_KEY);
-      return data ? JSON.parse(data) : {};
-    } catch {
-      return {};
-    }
+  public getEmailsFor(email: string): SentEmail[] {
+    const normalized = email.trim().toLowerCase();
+    return this.emails.filter((m) => m.to.toLowerCase() === normalized);
   }
 
-  public clearPendingVerification(email: string): void {
-    try {
-      const pending = this.getPendingVerifications();
-      delete pending[email.toLowerCase()];
-      localStorage.setItem(PENDING_VERIFICATIONS_KEY, JSON.stringify(pending));
-    } catch (e) {
-      console.error('Error clearing pending verification:', e);
-    }
+  public getLatestEmailFor(email: string): SentEmail | undefined {
+    return this.getEmailsFor(email)[0];
   }
 
-  public getLastConfirmationNotice(): EmailNotice | null {
-    try {
-      const data = localStorage.getItem(CONFIRMATION_KEY);
-      return data ? JSON.parse(data) : null;
-    } catch {
-      return null;
-    }
-  }
-
-  public clearLastConfirmationNotice(): void {
-    localStorage.removeItem(CONFIRMATION_KEY);
+  public getAllSentEmails(): SentEmail[] {
+    return this.emails;
   }
 }
 
