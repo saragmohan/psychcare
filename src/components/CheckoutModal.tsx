@@ -80,13 +80,13 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
       setIsProcessing(false);
       setSuccessInvoice(result.invoice);
-      if (onSuccess) {
-        onSuccess(result.invoice);
-      }
     }, 800);
   };
 
   const handleClose = () => {
+    if (successInvoice && onSuccess) {
+      onSuccess(successInvoice);
+    }
     setSuccessInvoice(null);
     setUtrNumber('');
     onClose();
@@ -94,7 +94,11 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
   return (
     <div
-      onClick={handleClose}
+      onClick={() => {
+        if (!successInvoice) {
+          handleClose();
+        }
+      }}
       className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-md animate-in fade-in cursor-pointer overflow-y-auto"
     >
       <div

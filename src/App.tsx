@@ -284,7 +284,7 @@ export default function App() {
         onClose={() => setIsPaywallOpen(false)}
         currentUser={currentUser}
         onUpgradeSuccess={() => {
-          alert('🎉 Congratulations! You have unlocked PsychCare Premium Pro.');
+          // Access activation is handled after admin verification
         }}
       />
     </div>
