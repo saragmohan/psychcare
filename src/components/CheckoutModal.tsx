@@ -181,6 +181,30 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
               </div>
             </div>
 
+            {/* Activation Timeline & Support Instructions Card */}
+            <div className="bg-amber-950/30 border border-amber-500/40 rounded-2xl p-4 sm:p-5 text-left max-w-lg mx-auto space-y-2.5">
+              <div className="flex items-center gap-2 font-bold text-amber-300 text-xs sm:text-sm">
+                <Clock className="w-4 h-4 text-amber-400 shrink-0" />
+                <span>Account Activation Timeline: Within 1–2 Hours</span>
+              </div>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Your payment submission has been recorded. Your account will be activated with <strong className="text-amber-300">Premium membership within 1–2 hours</strong> once admin verifies bank credit confirmation.
+              </p>
+              <div className="pt-2.5 border-t border-amber-500/20 text-[11px] text-slate-300 leading-relaxed">
+                <span className="font-semibold text-amber-300">Beyond 2 hours and membership still not granted?</span>
+                <p className="mt-1">
+                  Please send an email with your payment screenshot and UTR number to{' '}
+                  <a
+                    href={`mailto:support@psychcare.app?subject=Payment%20Verification%20Followup%20-%20Invoice%20${successInvoice.id}%20(UTR:%20${successInvoice.paymentMethod.utrNumber || ''})`}
+                    className="text-amber-300 hover:text-amber-200 font-bold underline transition"
+                  >
+                    support@psychcare.app
+                  </a>
+                  . Our team will verify and activate your account immediately.
+                </p>
+              </div>
+            </div>
+
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
               <button
@@ -199,6 +223,17 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
               >
                 <span>Back to Workspace</span>
               </button>
+            </div>
+
+            {/* Footer */}
+            <div className="pt-4 border-t border-slate-800/80 text-[11px] text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2 max-w-lg mx-auto">
+              <span>All rights reserved to PsychCare.</span>
+              <span>
+                Support:{' '}
+                <a href="mailto:support@psychcare.app" className="text-slate-400 hover:text-slate-300 underline font-medium">
+                  support@psychcare.app
+                </a>
+              </span>
             </div>
           </div>
         ) : (
@@ -404,10 +439,20 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
               <div className="flex items-center justify-center gap-4 text-[11px] text-slate-400">
                 <span className="flex items-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5 text-teal-400" /> Instant Software Activation
+                  <ShieldCheck className="w-3.5 h-3.5 text-teal-400" /> Manual Bank Verification (1-2 Hours)
                 </span>
                 <span>•</span>
                 <span>Official PDF Tax Receipt Issued</span>
+              </div>
+
+              <div className="pt-3 border-t border-slate-800 text-[11px] text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-1">
+                <span>All rights reserved to PsychCare.</span>
+                <span>
+                  Support:{' '}
+                  <a href="mailto:support@psychcare.app" className="text-slate-400 hover:text-slate-300 underline font-medium">
+                    support@psychcare.app
+                  </a>
+                </span>
               </div>
             </div>
           </form>

@@ -414,6 +414,20 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
         </form>
       </div>
 
+      {/* Login Screen Footer */}
+      <footer className="text-center text-xs text-slate-500 mt-4 space-y-1 relative z-10">
+        <div>All rights reserved to PsychCare.</div>
+        <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-400">
+          <span>Support & Helpdesk:</span>
+          <a
+            href="mailto:support@psychcare.app"
+            className="text-indigo-400 hover:text-indigo-300 font-semibold underline transition"
+          >
+            support@psychcare.app
+          </a>
+        </div>
+      </footer>
+
       <AvatarPickerModal
         isOpen={showAvatarPicker}
         onClose={() => setShowAvatarPicker(false)}

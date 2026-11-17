@@ -3,6 +3,7 @@ import type { PaymentInvoice, User } from '../types';
 
 export function generateInvoicePdf(invoice: PaymentInvoice, user: User): void {
   const doc = new jsPDF();
+  const isPending = invoice.status === 'pending_verification';
 
   // Primary Header Banner
   doc.setFillColor(30, 41, 59); // slate-800
@@ -19,13 +20,22 @@ export function generateInvoicePdf(invoice: PaymentInvoice, user: User): void {
   doc.setTextColor(203, 213, 225); // slate-300
   doc.text('Official Subscription Receipt & Tax Invoice', 16, 28);
 
-  // Status Badge (PAID)
-  doc.setFillColor(16, 185, 129); // emerald-500
-  doc.roundedRect(165, 12, 30, 12, 3, 3, 'F');
-  doc.setTextColor(255, 255, 255);
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10);
-  doc.text('PAID', 174, 20);
+  // Status Badge
+  if (isPending) {
+    doc.setFillColor(217, 119, 6); // amber-600
+    doc.roundedRect(150, 12, 45, 12, 3, 3, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.text('UNDER REVIEW', 155, 20);
+  } else {
+    doc.setFillColor(16, 185, 129); // emerald-500
+    doc.roundedRect(165, 12, 30, 12, 3, 3, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.text('PAID', 174, 20);
+  }
 
   // Invoice Details Section
   doc.setTextColor(51, 65, 85); // slate-700
@@ -38,7 +48,7 @@ export function generateInvoicePdf(invoice: PaymentInvoice, user: User): void {
   doc.setFontSize(9);
   doc.text(`Invoice ID: ${invoice.id}`, 16, 56);
   doc.text(`Date of Issue: ${new Date(invoice.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`, 16, 62);
-  doc.text(`Payment Status: Completed / Successful`, 16, 68);
+  doc.text(`Payment Status: ${isPending ? 'Pending Admin Verification' : 'Completed / Successful'}`, 16, 68);
 
   // Billed To Section
   doc.setFont('helvetica', 'bold');
@@ -144,9 +154,16 @@ export function generateInvoicePdf(invoice: PaymentInvoice, user: User): void {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
   doc.setTextColor(148, 163, 184); // slate-400
-  doc.text('Thank you for partnering with PsychCare Clinical OS to power your therapy practice.', 16, 250);
-  doc.text('For billing inquiries or tax documentation assistance, contact billing@psychcare.in or support@psychcare.in.', 16, 256);
-  doc.text('PsychCare Health Technologies Pvt Ltd • Bangalore, India (GST Exempt Software License)', 16, 262);
+
+  if (isPending) {
+    doc.text('Account will be activated with premium membership within 1-2 hours upon admin bank verification.', 16, 244);
+    doc.text('Beyond that hour if still not granted, please email payment screenshot to support@psychcare.app.', 16, 250);
+  } else {
+    doc.text('Thank you for partnering with PsychCare Clinical OS to power your therapy practice.', 16, 250);
+  }
+
+  doc.text('For billing inquiries or tax documentation assistance, contact support@psychcare.app.', 16, 256);
+  doc.text('All rights reserved to PsychCare. • Support: support@psychcare.app', 16, 262);
 
   doc.save(`PsychCare_Invoice_${invoice.id}.pdf`);
 }

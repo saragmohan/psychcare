@@ -73,27 +73,40 @@ export const BillingView: React.FC<BillingViewProps> = ({ currentUser }) => {
 
       {/* Pending Payment Verification Banner */}
       {pendingInvoice && (
-        <div className="bg-amber-950/40 border-2 border-amber-500/50 p-4 sm:p-5 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl animate-in fade-in">
-          <div className="flex items-center gap-3.5">
-            <div className="p-2.5 rounded-2xl bg-amber-500/20 text-amber-400 shrink-0">
+        <div className="bg-amber-950/40 border-2 border-amber-500/50 p-4 sm:p-5 rounded-3xl flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 shadow-xl animate-in fade-in">
+          <div className="flex items-start gap-3.5">
+            <div className="p-2.5 rounded-2xl bg-amber-500/20 text-amber-400 shrink-0 mt-0.5">
               <Clock className="w-6 h-6" />
             </div>
-            <div>
-              <div className="font-bold text-sm text-white flex items-center gap-2">
+            <div className="space-y-1">
+              <div className="font-bold text-sm text-white flex items-center gap-2 flex-wrap">
                 <span>UPI Payment Verification In Progress</span>
                 <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-amber-400 text-slate-950 uppercase tracking-wider">
                   Under Review
                 </span>
+                <span className="text-xs font-semibold text-amber-300">
+                  • Activated within 1–2 hours
+                </span>
               </div>
-              <p className="text-xs text-slate-300 mt-1 leading-relaxed">
-                Your transfer of <strong>₹{pendingInvoice.amount.toLocaleString('en-IN')} INR</strong> (UTR: <code className="text-amber-300 font-mono">{pendingInvoice.paymentMethod.utrNumber || 'N/A'}</code>) has been submitted. Our admin is verifying the credited funds in our bank account and will activate your subscription shortly.
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Your transfer of <strong>₹{pendingInvoice.amount.toLocaleString('en-IN')} INR</strong> (UTR: <code className="text-amber-300 font-mono">{pendingInvoice.paymentMethod.utrNumber || 'N/A'}</code>) has been submitted. Your account will be activated with premium membership within <strong>1–2 hours</strong>.
+              </p>
+              <p className="text-[11px] text-slate-400 leading-relaxed pt-0.5">
+                Beyond that hour and membership is still not granted? Please send an email with your payment screenshot to{' '}
+                <a
+                  href={`mailto:support@psychcare.app?subject=Payment%20Verification%20Followup%20-%20UTR%20${pendingInvoice.paymentMethod.utrNumber || ''}`}
+                  className="text-amber-300 hover:text-amber-200 font-bold underline"
+                >
+                  support@psychcare.app
+                </a>{' '}
+                for immediate assistance.
               </p>
             </div>
           </div>
           <button
             type="button"
             onClick={() => generateInvoicePdf(pendingInvoice, user)}
-            className="w-full sm:w-auto px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 border border-slate-700 shrink-0 cursor-pointer"
+            className="w-full lg:w-auto px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 border border-slate-700 shrink-0 cursor-pointer"
           >
             <Download className="w-3.5 h-3.5" />
             <span>Provisional Receipt</span>

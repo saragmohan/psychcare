@@ -158,6 +158,25 @@ export default function App() {
         {currentUser.role === 'admin' && activeTab === 'admin_logs' && <AuditLogsView />}
       </main>
 
+      {/* Global Application Footer */}
+      <footer className="w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 mt-12 mb-16 md:mb-6 pt-6 border-t border-slate-900 text-center text-xs text-slate-500">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <img src="/logo.png" alt="PsychCare" className="w-5 h-5 rounded-md object-contain" />
+            <span className="font-medium text-slate-400">All rights reserved to PsychCare.</span>
+          </div>
+          <div className="flex items-center gap-2 text-slate-400 text-xs">
+            <span>Support & Assistance:</span>
+            <a
+              href="mailto:support@psychcare.app"
+              className="text-indigo-400 hover:text-indigo-300 font-semibold underline transition"
+            >
+              support@psychcare.app
+            </a>
+          </div>
+        </div>
+      </footer>
+
       {/* Mobile Bottom Navigation Bar */}
       {currentUser.role === 'psychologist' && (
         <nav className="md:hidden fixed bottom-0 left-0 right-0 w-full max-w-full bg-slate-900/95 border-t border-slate-800 backdrop-blur-lg pt-1.5 pb-[max(0.6rem,env(safe-area-inset-bottom,0px))] px-1 flex justify-around items-center z-40 shadow-2xl">
