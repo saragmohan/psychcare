@@ -159,7 +159,7 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
                 </span>
               </div>
               <div className="text-[11px] text-slate-500">
-                Instant web activation • Direct UPI / QR / Card Link • One-time transfer
+                Instant web activation • Direct UPI (Google Pay / PhonePe / Paytm) • One-time transfer
               </div>
             </div>
 

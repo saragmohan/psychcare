@@ -240,7 +240,7 @@ export const BillingView: React.FC<BillingViewProps> = ({ currentUser }) => {
               }}
               className="w-full py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs transition cursor-pointer flex items-center justify-center gap-2 border border-slate-700"
             >
-              <span>Unlock Monthly Pass (₹2,499)</span>
+              <span>Pay via UPI (₹2,499)</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -299,7 +299,7 @@ export const BillingView: React.FC<BillingViewProps> = ({ currentUser }) => {
               className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 via-indigo-600 to-indigo-700 hover:from-amber-400 hover:to-indigo-500 text-white font-extrabold text-xs shadow-xl shadow-indigo-600/30 transition cursor-pointer flex items-center justify-center gap-2"
             >
               <Crown className="w-4 h-4 text-amber-300 fill-amber-300" />
-              <span>Unlock Annual Pass (₹19,999)</span>
+              <span>Pay via UPI (₹19,999)</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -357,8 +357,8 @@ export const BillingView: React.FC<BillingViewProps> = ({ currentUser }) => {
                     <td className="py-3.5 px-3 text-slate-300 font-medium">
                       {inv.planName}
                       <span className="block text-[10px] text-slate-500">
-                        {inv.paymentMethod.type.toUpperCase()}{' '}
-                        {inv.paymentMethod.last4 ? `(•••• ${inv.paymentMethod.last4})` : ''}
+                        UPI{' '}
+                        {inv.paymentMethod.utrNumber ? `(UTR: ${inv.paymentMethod.utrNumber})` : inv.paymentMethod.last4 ? `(•••• ${inv.paymentMethod.last4})` : ''}
                       </span>
                     </td>
                     <td className="py-3.5 px-3 font-bold text-white">₹{inv.amount.toLocaleString('en-IN')} INR</td>
