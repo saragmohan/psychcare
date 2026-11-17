@@ -5,6 +5,8 @@ import {
   Play,
   FileText,
   Trash2,
+  AlertCircle,
+  UserPlus,
 } from 'lucide-react';
 import {
   LineChart,
@@ -29,24 +31,41 @@ interface AssessmentsViewProps {
   currentUser: User;
   selectedClientId?: string;
   onOpenPaywall: () => void;
+  setActiveTab?: (tab: string) => void;
+  onNavigateToAddPatient?: () => void;
 }
 
 export const AssessmentsView: React.FC<AssessmentsViewProps> = ({
   currentUser,
   selectedClientId,
   onOpenPaywall,
+  setActiveTab,
+  onNavigateToAddPatient,
 }) => {
   const clients = storage.getClients(currentUser.id);
   const [activeClientId, setActiveClientId] = useState<string>(() => {
     const initialClient = clients.find((c) => c.id === selectedClientId);
     return initialClient ? initialClient.id : clients[0]?.id || '';
   });
+  const [showNoPatientModal, setShowNoPatientModal] = useState<boolean>(() => clients.length === 0);
 
   React.useEffect(() => {
     const currentClients = storage.getClients(currentUser.id);
     const validClient = currentClients.find((c) => c.id === selectedClientId);
     setActiveClientId(validClient ? validClient.id : currentClients[0]?.id || '');
-  }, [currentUser.id, selectedClientId]);
+    if (currentClients.length === 0) {
+      setShowNoPatientModal(true);
+    }
+  }, [currentUser.id, selectedClientId, clients.length]);
+
+  const handleAddPatient = () => {
+    setShowNoPatientModal(false);
+    if (onNavigateToAddPatient) {
+      onNavigateToAddPatient();
+    } else if (setActiveTab) {
+      setActiveTab('clients');
+    }
+  };
 
   const [testType, setTestType] = useState<'PHQ-9' | 'GAD-7'>('PHQ-9');
   const [answers, setAnswers] = useState<Record<number, number>>({});
@@ -117,17 +136,31 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({
           <select
             value={activeClientId}
             onChange={(e) => setActiveClientId(e.target.value)}
-            className="bg-slate-950 border border-slate-800 text-xs font-semibold text-white px-3 py-2.5 rounded-xl focus:outline-none w-full sm:w-auto cursor-pointer"
+            disabled={clients.length === 0}
+            className={`bg-slate-950 border border-slate-800 text-xs font-semibold px-3 py-2.5 rounded-xl focus:outline-none w-full sm:w-auto ${
+              clients.length === 0 ? 'text-slate-500 opacity-60 cursor-not-allowed' : 'text-white cursor-pointer'
+            }`}
           >
-            {clients.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.fullName}
-              </option>
-            ))}
+            {clients.length === 0 ? (
+              <option value="">No patients available</option>
+            ) : (
+              clients.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.fullName}
+                </option>
+              ))
+            )}
           </select>
 
           <button
-            onClick={() => setIsTestRunning(!isTestRunning)}
+            type="button"
+            onClick={() => {
+              if (clients.length === 0) {
+                setShowNoPatientModal(true);
+                return;
+              }
+              setIsTestRunning(!isTestRunning);
+            }}
             className="px-4 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs shadow-lg shadow-teal-600/30 flex items-center justify-center gap-1.5 transition-all cursor-pointer"
           >
             <Play className="w-3.5 h-3.5" />
@@ -136,8 +169,90 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({
         </div>
       </div>
 
-      {/* Main Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+      {/* No Patients Available Confirmation Modal */}
+      {showNoPatientModal && clients.length === 0 && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
+            <div className="w-12 h-12 rounded-2xl bg-teal-500/10 border border-teal-500/20 text-teal-400 flex items-center justify-center">
+              <UserPlus className="w-6 h-6" />
+            </div>
+            <div className="space-y-1.5">
+              <h3 className="text-lg font-bold text-white">No Patient Available</h3>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                To conduct and track standardized psychometric assessments (PHQ-9 for Depression and GAD-7 for Anxiety), an active patient profile is required.
+              </p>
+              <p className="text-xs text-teal-300 font-semibold pt-1">
+                Would you like to add a new patient now?
+              </p>
+            </div>
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowNoPatientModal(false)}
+                className="flex-1 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleAddPatient}
+                className="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <UserPlus className="w-4 h-4" />
+                <span>Add Patient</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Alert Banner for 0 Patients */}
+      {clients.length === 0 && (
+        <div className="bg-amber-950/40 border border-amber-800/60 p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 text-slate-200 text-xs shadow-lg">
+          <div className="flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-400 shrink-0" />
+            <div>
+              <span className="font-bold text-amber-200">Patient Profile Required:</span>
+              <span className="text-slate-300 ml-1">
+                No patients are currently registered. Please register a patient before conducting PHQ-9 or GAD-7 evaluations.
+              </span>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={handleAddPatient}
+            className="w-full sm:w-auto px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 shadow-md shrink-0"
+          >
+            <UserPlus className="w-4 h-4" />
+            <span>+ Add Patient Now</span>
+          </button>
+        </div>
+      )}
+
+      {clients.length === 0 ? (
+        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 sm:p-14 shadow-xl text-center space-y-4">
+          <div className="w-16 h-16 rounded-3xl bg-teal-500/10 border border-teal-500/20 text-teal-400 flex items-center justify-center mx-auto shadow-inner">
+            <UserPlus className="w-8 h-8" />
+          </div>
+          <div className="max-w-md mx-auto space-y-2">
+            <h3 className="text-lg font-bold text-white">No Patients Found</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Standardized psychometric testing requires associating outcomes with an active client. Click below to navigate to the Patient directory and open patient intake.
+            </p>
+          </div>
+          <div className="pt-2">
+            <button
+              type="button"
+              onClick={handleAddPatient}
+              className="px-6 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/30 inline-flex items-center gap-2 transition cursor-pointer"
+            >
+              <UserPlus className="w-4 h-4" />
+              <span>Go to Patients & Add New Patient</span>
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Test Runner or Chart */}
         <div className="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-3xl p-4 sm:p-6 shadow-xl space-y-6">
           <div className="flex items-center gap-2 border-b border-slate-800 pb-4">
@@ -337,6 +452,7 @@ export const AssessmentsView: React.FC<AssessmentsViewProps> = ({
           </div>
         </div>
       </div>
-    </div>
-  );
+    )}
+  </div>
+);
 };

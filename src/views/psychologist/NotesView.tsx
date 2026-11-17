@@ -21,6 +21,7 @@ interface NotesViewProps {
   selectedClientId?: string;
   onOpenPaywall: () => void;
   setActiveTab?: (tab: string) => void;
+  onNavigateToAddPatient?: () => void;
 }
 
 export const NotesView: React.FC<NotesViewProps> = ({
@@ -28,6 +29,7 @@ export const NotesView: React.FC<NotesViewProps> = ({
   selectedClientId,
   onOpenPaywall,
   setActiveTab,
+  onNavigateToAddPatient,
 }) => {
   const clients = storage.getClients(currentUser.id);
   const [activeClientId, setActiveClientId] = useState<string>(() => {
@@ -156,9 +158,15 @@ export const NotesView: React.FC<NotesViewProps> = ({
       {clients.length === 0 && (
         <div className="bg-rose-950/40 border border-rose-800/60 p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 text-slate-200 text-xs">
           <span>⚠️ You currently have 0 patients registered. A patient is required before creating a SOAP note.</span>
-          {setActiveTab && (
+          {(onNavigateToAddPatient || setActiveTab) && (
             <button
-              onClick={() => setActiveTab('clients')}
+              onClick={() => {
+                if (onNavigateToAddPatient) {
+                  onNavigateToAddPatient();
+                } else if (setActiveTab) {
+                  setActiveTab('clients');
+                }
+              }}
               className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shrink-0 transition cursor-pointer"
             >
               + Register Patient First

@@ -22,6 +22,8 @@ interface ClientsViewProps {
   selectedClientId?: string;
   onSelectClient: (id: string) => void;
   setActiveTab: (tab: string) => void;
+  autoOpenAddModal?: boolean;
+  onResetAutoOpenModal?: () => void;
 }
 
 export const ClientsView: React.FC<ClientsViewProps> = ({
@@ -30,10 +32,24 @@ export const ClientsView: React.FC<ClientsViewProps> = ({
   selectedClientId,
   onSelectClient,
   setActiveTab,
+  autoOpenAddModal,
+  onResetAutoOpenModal,
 }) => {
   const [search, setSearch] = useState('');
   const [riskFilter, setRiskFilter] = useState<string>('all');
   const [showAddModal, setShowAddModal] = useState(false);
+
+  React.useEffect(() => {
+    if (autoOpenAddModal) {
+      const check = storage.canAddClient(currentUser);
+      if (!check.allowed) {
+        onOpenPaywall();
+      } else {
+        setShowAddModal(true);
+      }
+      onResetAutoOpenModal?.();
+    }
+  }, [autoOpenAddModal, currentUser, onOpenPaywall, onResetAutoOpenModal]);
 
   const [fullName, setFullName] = useState('');
   const [age, setAge] = useState<number>(30);

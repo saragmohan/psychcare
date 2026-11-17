@@ -27,6 +27,12 @@ export default function App() {
     userClients[0]?.id || ''
   );
   const [isPaywallOpen, setIsPaywallOpen] = useState<boolean>(false);
+  const [autoOpenClientModal, setAutoOpenClientModal] = useState<boolean>(false);
+
+  const handleNavigateToAddPatient = () => {
+    setActiveTab('clients');
+    setAutoOpenClientModal(true);
+  };
 
   useEffect(() => {
     const unsubscribe = storage.subscribe(() => {
@@ -107,6 +113,8 @@ export default function App() {
             selectedClientId={selectedClientId}
             onSelectClient={handleSelectClient}
             setActiveTab={setActiveTab}
+            autoOpenAddModal={autoOpenClientModal}
+            onResetAutoOpenModal={() => setAutoOpenClientModal(false)}
           />
         )}
 
@@ -116,6 +124,7 @@ export default function App() {
             selectedClientId={selectedClientId}
             onOpenPaywall={() => setIsPaywallOpen(true)}
             setActiveTab={setActiveTab}
+            onNavigateToAddPatient={handleNavigateToAddPatient}
           />
         )}
 
@@ -124,6 +133,8 @@ export default function App() {
             currentUser={currentUser}
             selectedClientId={selectedClientId}
             onOpenPaywall={() => setIsPaywallOpen(true)}
+            setActiveTab={setActiveTab}
+            onNavigateToAddPatient={handleNavigateToAddPatient}
           />
         )}
 
