@@ -79,7 +79,7 @@ export function generateInvoicePdf(invoice: PaymentInvoice, user: User): void {
   doc.setFontSize(9.5);
   doc.text(invoice.planName, 20, 108);
   doc.text(invoice.billingCycle === 'yearly' ? 'Annual (365 Days)' : 'Monthly (30 Days)', 105, 108);
-  doc.text(`$${invoice.amount.toFixed(2)} USD`, 165, 108);
+  doc.text(`INR ${invoice.amount.toLocaleString('en-IN')}`, 165, 108);
 
   doc.setFont('helvetica', 'italic');
   doc.setFontSize(8);
@@ -94,10 +94,10 @@ export function generateInvoicePdf(invoice: PaymentInvoice, user: User): void {
   doc.setTextColor(71, 85, 105);
   doc.setFontSize(9);
   doc.text('Subtotal:', 135, 132);
-  doc.text(`$${invoice.amount.toFixed(2)}`, 165, 132);
+  doc.text(`INR ${invoice.amount.toLocaleString('en-IN')}`, 165, 132);
 
-  doc.text('Tax / VAT (0%):', 135, 138);
-  doc.text('$0.00', 165, 138);
+  doc.text('GST / Tax (0%):', 135, 138);
+  doc.text('INR 0.00', 165, 138);
 
   doc.setFillColor(238, 242, 255); // indigo-50
   doc.rect(130, 144, 64, 12, 'F');
@@ -105,7 +105,7 @@ export function generateInvoicePdf(invoice: PaymentInvoice, user: User): void {
   doc.setTextColor(67, 56, 202); // indigo-700
   doc.setFontSize(11);
   doc.text('Total Paid:', 135, 152);
-  doc.text(`$${invoice.amount.toFixed(2)} USD`, 165, 152);
+  doc.text(`INR ${invoice.amount.toLocaleString('en-IN')}`, 165, 152);
 
   // Payment Method Details
   doc.setFont('helvetica', 'bold');

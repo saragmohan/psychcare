@@ -703,7 +703,7 @@ class StorageService {
     const targetUser = this.users.find((u) => u.id === userId) || this.getCurrentUser();
     const daysValid = payload.billingCycle === 'yearly' ? 365 : 30;
     const expiry = new Date(Date.now() + daysValid * 24 * 60 * 60 * 1000).toISOString();
-    const amount = payload.billingCycle === 'yearly' ? 249 : 29;
+    const amount = payload.billingCycle === 'yearly' ? 19999 : 2499;
 
     const invoiceId = `INV-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`;
 
@@ -718,7 +718,7 @@ class StorageService {
       planName: `PsychCare Premium Pro (${payload.billingCycle === 'yearly' ? 'Annual' : 'Monthly'})`,
       billingCycle: payload.billingCycle,
       amount,
-      currency: 'USD',
+      currency: 'INR',
       date: new Date().toISOString(),
       paymentMethod: {
         type: payload.paymentMethodType,
@@ -752,7 +752,7 @@ class StorageService {
       'PAYMENT_SUCCESS',
       targetUser.id,
       targetUser.name,
-      `Successfully processed web payment of $${amount} USD for ${newInvoice.planName} (Invoice: ${invoiceId}).`
+      `Successfully processed web payment of ₹${amount.toLocaleString('en-IN')} INR for ${newInvoice.planName} (Invoice: ${invoiceId}).`
     );
 
     return { success: true, invoice: newInvoice };

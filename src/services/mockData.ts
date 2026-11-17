@@ -440,8 +440,8 @@ export const INITIAL_INVOICES: PaymentInvoice[] = [
     userEmail: 'marcus.vance@therapy.org',
     planName: 'PsychCare Premium Pro (Annual)',
     billingCycle: 'yearly',
-    amount: 249,
-    currency: 'USD',
+    amount: 19999,
+    currency: 'INR',
     date: new Date(now.getTime() - 25 * 24 * 60 * 60 * 1000).toISOString(),
     paymentMethod: {
       type: 'card',

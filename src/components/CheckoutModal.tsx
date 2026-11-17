@@ -43,9 +43,9 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
   if (!isOpen) return null;
 
-  const planPrice = billingCycle === 'yearly' ? 249 : 29;
-  const originalYearlyValue = 29 * 12; // 348
-  const savings = originalYearlyValue - 249; // 99
+  const planPrice = billingCycle === 'yearly' ? 19999 : 2499;
+  const originalYearlyValue = 2499 * 12; // 29988
+  const savings = originalYearlyValue - 19999; // 9989
 
   const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let val = e.target.value.replace(/\D/g, '').substring(0, 16);
@@ -156,7 +156,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
               </div>
               <div className="flex items-center justify-between border-b border-slate-800/80 pb-2.5">
                 <span className="text-xs text-slate-400">Amount Charged:</span>
-                <span className="text-xs font-bold text-white">${successInvoice.amount}.00 USD</span>
+                <span className="text-xs font-bold text-white">₹{successInvoice.amount.toLocaleString('en-IN')} INR</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-xs text-slate-400">Payment Channel:</span>
@@ -211,12 +211,12 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-sm text-white">Annual Membership</span>
                     <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-amber-400 text-slate-950">
-                      SAVE ${savings} (28%)
+                      SAVE ₹{savings.toLocaleString('en-IN')} (33%)
                     </span>
                   </div>
                   <div>
-                    <div className="text-xl font-black text-white">$249 <span className="text-xs font-normal text-slate-400">/ year</span></div>
-                    <div className="text-[11px] text-amber-300/90 font-medium mt-0.5">Equals $20.75 / month (Billed yearly)</div>
+                    <div className="text-xl font-black text-white">₹19,999 <span className="text-xs font-normal text-slate-400">/ year</span></div>
+                    <div className="text-[11px] text-amber-300/90 font-medium mt-0.5">Equals ₹1,666 / month (Billed yearly)</div>
                   </div>
                 </button>
 
@@ -234,7 +234,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                     <span className="text-[11px] text-slate-400">Flexibility</span>
                   </div>
                   <div>
-                    <div className="text-xl font-black text-white">$29 <span className="text-xs font-normal text-slate-400">/ month</span></div>
+                    <div className="text-xl font-black text-white">₹2,499 <span className="text-xs font-normal text-slate-400">/ month</span></div>
                     <div className="text-[11px] text-slate-400 mt-0.5">Billed monthly, cancel anytime</div>
                   </div>
                 </button>
@@ -424,11 +424,11 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
               </div>
               <div className="flex justify-between text-slate-400">
                 <span>Applicable Taxes:</span>
-                <span className="font-semibold text-white">$0.00 USD</span>
+                <span className="font-semibold text-white">₹0.00 INR</span>
               </div>
               <div className="border-t border-slate-800 pt-2 flex justify-between items-center">
                 <span className="font-bold text-sm text-white">Total Due Today:</span>
-                <span className="font-black text-lg text-emerald-400">${planPrice}.00 USD</span>
+                <span className="font-black text-lg text-emerald-400">₹{planPrice.toLocaleString('en-IN')} INR</span>
               </div>
             </div>
 
@@ -444,7 +444,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 ) : (
                   <>
                     <Lock className="w-4 h-4" />
-                    <span>AUTHORIZE & PAY ${planPrice}.00 USD</span>
+                    <span>AUTHORIZE & PAY ₹{planPrice.toLocaleString('en-IN')} INR</span>
                   </>
                 )}
               </button>

@@ -211,7 +211,7 @@ export const BillingView: React.FC<BillingViewProps> = ({ currentUser }) => {
 
               <div>
                 <div className="text-3xl font-black text-white">
-                  $29 <span className="text-sm font-normal text-slate-400">/ month</span>
+                  ₹2,499 <span className="text-sm font-normal text-slate-400">/ month</span>
                 </div>
                 <p className="text-xs text-slate-400 mt-1">
                   Flexible month-to-month access for private clinicians.
@@ -246,7 +246,7 @@ export const BillingView: React.FC<BillingViewProps> = ({ currentUser }) => {
               }}
               className="w-full py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs transition cursor-pointer flex items-center justify-center gap-2 border border-slate-700"
             >
-              <span>Subscribe Monthly ($29/mo)</span>
+              <span>Subscribe Monthly (₹2,499/mo)</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -254,7 +254,7 @@ export const BillingView: React.FC<BillingViewProps> = ({ currentUser }) => {
           {/* Annual Tier (Recommended) */}
           <div className="bg-gradient-to-b from-indigo-950/40 via-slate-900 to-amber-950/20 border-2 border-amber-500/50 rounded-3xl p-6 shadow-2xl space-y-4 flex flex-col justify-between relative overflow-hidden">
             <div className="absolute top-0 right-0 bg-amber-400 text-slate-950 text-[10px] font-black px-4 py-1 rounded-bl-2xl shadow-md uppercase tracking-wider">
-              SAVE 28% ($99 OFF)
+              SAVE 33% (₹9,989 OFF)
             </div>
 
             <div className="space-y-3">
@@ -269,10 +269,10 @@ export const BillingView: React.FC<BillingViewProps> = ({ currentUser }) => {
 
               <div>
                 <div className="text-3xl font-black text-white">
-                  $249 <span className="text-sm font-normal text-slate-400">/ year</span>
+                  ₹19,999 <span className="text-sm font-normal text-slate-400">/ year</span>
                 </div>
                 <p className="text-xs text-amber-200/80 mt-1">
-                  Just <strong>$20.75 / month</strong> billed annually.
+                  Just <strong>₹1,666 / month</strong> billed annually.
                 </p>
               </div>
 
@@ -305,7 +305,7 @@ export const BillingView: React.FC<BillingViewProps> = ({ currentUser }) => {
               className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 via-indigo-600 to-indigo-700 hover:from-amber-400 hover:to-indigo-500 text-white font-extrabold text-xs shadow-xl shadow-indigo-600/30 transition cursor-pointer flex items-center justify-center gap-2"
             >
               <Crown className="w-4 h-4 text-amber-300 fill-amber-300" />
-              <span>Unlock Annual Pro ($249/yr)</span>
+              <span>Unlock Annual Pro (₹19,999/yr)</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -367,7 +367,7 @@ export const BillingView: React.FC<BillingViewProps> = ({ currentUser }) => {
                         {inv.paymentMethod.last4 ? `(•••• ${inv.paymentMethod.last4})` : ''}
                       </span>
                     </td>
-                    <td className="py-3.5 px-3 font-bold text-white">${inv.amount}.00 USD</td>
+                    <td className="py-3.5 px-3 font-bold text-white">₹{inv.amount.toLocaleString('en-IN')} INR</td>
                     <td className="py-3.5 px-3">
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                         <CheckCircle2 className="w-3 h-3 text-emerald-400" /> PAID

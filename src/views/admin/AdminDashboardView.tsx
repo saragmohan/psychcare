@@ -48,7 +48,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
   const adminAppointments = storage.getAppointments('usr_admin');
 
   // Financial Metrics Estimate
-  const estimatedMRR = premiumUsers.length * 29;
+  const estimatedMRR = premiumUsers.length * 2499;
 
   const handleGrantPremium = (userId: string) => {
     storage.adminGrantPremium(userId, 365);
@@ -263,7 +263,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
           <div className="text-2xl sm:text-3xl font-black text-white">{premiumUsers.length} Pro</div>
           <div className="text-[11px] text-amber-300 font-medium flex items-center gap-1">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>~${estimatedMRR} / mo Subscription Volume</span>
+            <span>~₹{estimatedMRR.toLocaleString('en-IN')} / mo Subscription Volume</span>
           </div>
         </div>
 

@@ -87,7 +87,7 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
                     : 'text-slate-400 hover:text-white'
                 }`}
               >
-                Monthly ($29/mo)
+                Monthly (₹2,499/mo)
               </button>
               <button
                 type="button"
@@ -98,9 +98,9 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
                     : 'text-slate-400 hover:text-white'
                 }`}
               >
-                <span>Annual ($249/yr)</span>
+                <span>Annual (₹19,999/yr)</span>
                 <span className="bg-amber-400 text-slate-950 text-[10px] font-extrabold px-1.5 py-0.5 rounded">
-                  SAVE 28%
+                  SAVE 33%
                 </span>
               </button>
             </div>
@@ -153,9 +153,9 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({
           <div className="p-4 sm:p-6 bg-slate-950 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="text-center sm:text-left">
               <div className="text-2xl font-black text-white">
-                {billingCycle === 'yearly' ? '$249' : '$29'}
+                {billingCycle === 'yearly' ? '₹19,999' : '₹2,499'}
                 <span className="text-xs text-slate-400 font-normal">
-                  /{billingCycle === 'yearly' ? 'year ($20.75/mo)' : 'month'}
+                  /{billingCycle === 'yearly' ? 'year (₹1,666/mo)' : 'month'}
                 </span>
               </div>
               <div className="text-[11px] text-slate-500">
