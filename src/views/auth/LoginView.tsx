@@ -16,6 +16,7 @@ import { authService } from '../../services/authService';
 import { AVATAR_CHARACTERS } from '../../services/avatarCharacters';
 import { AvatarPickerModal } from '../../components/AvatarPickerModal';
 import { ForgotPasswordModal } from '../../components/ForgotPasswordModal';
+import logoImg from '../../assets/logo.png';
 
 interface LoginViewProps {
   onLoginSuccess: () => void;
@@ -142,7 +143,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
         <div className="text-center space-y-2">
           <div className="inline-flex items-center justify-center p-2 bg-[#E4E0DA] rounded-3xl shadow-xl shadow-indigo-500/10 mb-1 border border-slate-700/60">
             <img
-              src="/logo.png"
+              src={logoImg}
               alt="PsychCare Logo"
               className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-contain shadow-sm"
             />

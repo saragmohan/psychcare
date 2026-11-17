@@ -17,6 +17,7 @@ import type { User } from '../types';
 import { storage } from '../services/storageService';
 import { AvatarPickerModal } from './AvatarPickerModal';
 import { ProfilePasswordModal } from './ProfilePasswordModal';
+import logoImg from '../assets/logo.png';
 
 interface NavbarProps {
   currentUser: User;
@@ -79,7 +80,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             <div className="p-1 bg-[#E4E0DA] rounded-xl shadow-md border border-slate-700/60 shrink-0">
               <img
-                src="/logo.png"
+                src={logoImg}
                 alt="PsychCare"
                 className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg object-contain"
               />

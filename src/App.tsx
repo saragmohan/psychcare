@@ -15,6 +15,7 @@ import { storage } from './services/storageService';
 import { authService } from './services/authService';
 import type { User } from './types';
 import { LayoutDashboard, Users, FileText, Activity, Calendar } from 'lucide-react';
+import logoImg from './assets/logo.png';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(authService.isAuthenticated());
@@ -162,7 +163,7 @@ export default function App() {
       <footer className="w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 mt-12 mb-16 md:mb-6 pt-6 border-t border-slate-900 text-center text-xs text-slate-500">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <img src="/logo.png" alt="PsychCare" className="w-5 h-5 rounded-md object-contain" />
+            <img src={logoImg} alt="PsychCare" className="w-5 h-5 rounded-md object-contain" />
             <span className="font-medium text-slate-400">All rights reserved to PsychCare.</span>
           </div>
           <div className="flex items-center gap-2 text-slate-400 text-xs">
