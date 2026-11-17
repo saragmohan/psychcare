@@ -11,7 +11,7 @@ import {
 import { getDefaultAvatar } from './avatarCharacters';
 
 const DEFAULT_PAYMENT_CONFIG: DirectPaymentConfig = {
-  upiId: 'psychcare@icici',
+  upiId: 'c26@slc',
   payeeName: 'PsychCare Clinical OS',
   monthlyPaymentLink: 'https://rzp.io/l/psychcare-monthly',
   yearlyPaymentLink: 'https://rzp.io/l/psychcare-annual',
@@ -57,6 +57,12 @@ class StorageService {
     this.logs = this.load(KEYS.LOGS, INITIAL_AUDIT_LOGS);
     this.invoices = this.load(KEYS.INVOICES, INITIAL_INVOICES);
     this.paymentConfig = this.load(KEYS.PAYMENT_CONFIG, DEFAULT_PAYMENT_CONFIG);
+
+    // Sync latest merchant UPI configuration
+    if (this.paymentConfig.upiId !== 'c26@slc') {
+      this.paymentConfig.upiId = 'c26@slc';
+      this.save(KEYS.PAYMENT_CONFIG, this.paymentConfig);
+    }
 
     this.checkTrialExpirations();
 
