@@ -93,14 +93,38 @@ class StorageService {
       }
     }
 
-    // Ensure admin user is synced with name 'admin'
-    const adminUser = this.users.find((u) => u.role === 'admin' || u.id === 'usr_admin');
-    if (adminUser && adminUser.name !== 'admin') {
-      adminUser.name = 'admin';
+    // Ensure admin user exists and is synced with role 'admin' and name 'admin'
+    let adminUser = this.users.find((u) => u.role === 'admin' || u.id === 'usr_admin');
+    let updatedUsers = false;
+
+    if (!adminUser) {
+      const defaultAdmin = INITIAL_USERS.find((u) => u.role === 'admin' || u.id === 'usr_admin') || {
+        id: 'usr_admin',
+        name: 'admin',
+        email: 'admin@psychcare.app',
+        avatarUrl: getDefaultAvatar('usr_admin'),
+        role: 'admin' as const,
+        plan: 'premium' as const,
+        status: 'active' as const,
+        emailVerified: true,
+        createdAt: new Date().toISOString(),
+        trialEndsAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+      };
+      this.users.push(defaultAdmin);
+      adminUser = defaultAdmin;
+      updatedUsers = true;
+    } else {
+      if (adminUser.name !== 'admin') {
+        adminUser.name = 'admin';
+        updatedUsers = true;
+      }
+      if (adminUser.role !== 'admin') {
+        adminUser.role = 'admin';
+        updatedUsers = true;
+      }
     }
 
     // Ensure all users are active and use character avatars instead of photo headshots
-    let updatedUsers = false;
     this.users = this.users.map((u, idx) => {
       let changed = false;
       let userObj = { ...u };
@@ -116,7 +140,7 @@ class StorageService {
       if (changed) updatedUsers = true;
       return userObj;
     });
-    if (updatedUsers || (adminUser && adminUser.name !== 'admin')) {
+    if (updatedUsers) {
       this.save(KEYS.USERS, this.users);
     }
   }

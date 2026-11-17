@@ -355,6 +355,62 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
               </>
             )}
           </button>
+
+          {/* Quick Demo Sign-In Buttons */}
+          {!isSignUp && (
+            <div className="pt-3 border-t border-slate-800/80 space-y-2">
+              <div className="flex items-center justify-between text-[11px] font-semibold text-slate-400">
+                <span>Quick Sign-In (One-Click):</span>
+                <span className="text-[10px] text-slate-500">Auto-authenticates</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setErrorMsg(null);
+                    setEmail('admin');
+                    setPassword('!Inikasijoy1');
+                    setLoading(true);
+                    const res = await authService.login('admin', '!Inikasijoy1');
+                    setLoading(false);
+                    if (res.success) {
+                      onLoginSuccess();
+                    } else {
+                      setErrorMsg(res.error || 'Admin login failed');
+                    }
+                  }}
+                  className="px-3 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+                  <span>🛡️ Super Admin</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setErrorMsg(null);
+                    setEmail('sarah.chen@clinic.com');
+                    setPassword('password123');
+                    setLoading(true);
+                    const res = await authService.login('sarah.chen@clinic.com', 'password123');
+                    setLoading(false);
+                    if (res.success) {
+                      onLoginSuccess();
+                    } else {
+                      setErrorMsg(res.error || 'Practitioner login failed');
+                    }
+                  }}
+                  className="px-3 py-2 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer"
+                >
+                  <User className="w-3.5 h-3.5 text-indigo-400" />
+                  <span>🩺 Dr. Sarah</span>
+                </button>
+              </div>
+              <div className="text-[10px] text-center text-slate-500 pt-0.5">
+                Admin: <span className="text-amber-400 font-mono">admin</span> / <span className="text-amber-400 font-mono">!Inikasijoy1</span> (or <span className="text-amber-400 font-mono">admin</span>)
+              </div>
+            </div>
+          )}
         </form>
       </div>
 

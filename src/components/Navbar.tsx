@@ -11,6 +11,7 @@ import {
   Smile,
   CreditCard,
   KeyRound,
+  User as UserIcon,
 } from 'lucide-react';
 import type { User } from '../types';
 import { storage } from '../services/storageService';
@@ -364,6 +365,39 @@ export const Navbar: React.FC<NavbarProps> = ({
 
                   {/* Actions */}
                   <div className="space-y-1 pt-1">
+                    {currentUser.role === 'admin' ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowRoleDropdown(false);
+                          const psy = storage.getUsers().find((u) => u.role === 'psychologist') || storage.getUsers()[0];
+                          if (psy) {
+                            storage.setCurrentUser(psy.id);
+                            setActiveTab('dashboard');
+                          }
+                        }}
+                        className="w-full text-left px-3 py-2 text-indigo-300 hover:bg-slate-800 rounded-xl transition flex items-center gap-2.5 text-xs font-semibold cursor-pointer"
+                      >
+                        <UserIcon className="w-4 h-4 text-indigo-400 shrink-0" />
+                        <span>Switch to Practitioner View</span>
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowRoleDropdown(false);
+                          let admin = storage.getUsers().find((u) => u.role === 'admin' || u.id === 'usr_admin');
+                          if (admin) {
+                            storage.setCurrentUser(admin.id);
+                            setActiveTab('admin_dashboard');
+                          }
+                        }}
+                        className="w-full text-left px-3 py-2 text-amber-300 hover:bg-slate-800 rounded-xl transition flex items-center gap-2.5 text-xs font-semibold cursor-pointer"
+                      >
+                        <ShieldCheck className="w-4 h-4 text-amber-400 shrink-0" />
+                        <span>Switch to Admin Console</span>
+                      </button>
+                    )}
 
                     {currentUser.role === 'psychologist' && currentUser.plan !== 'premium' && (
                       <button

@@ -99,25 +99,50 @@ class AuthService {
     const normalized = input.toLowerCase();
 
     // 1. Explicit Administrator Authentication
-    if (normalized === 'admin' || normalized === 'admin@psychcare.app') {
+    const isAdminIdentifier =
+      normalized === 'admin' ||
+      normalized === 'admin@psychcare.app' ||
+      normalized === 'administrator' ||
+      normalized === 'admin@practice.com';
+
+    if (isAdminIdentifier) {
       const creds = this.getStoredCredentials();
-      const adminPass = creds['admin'] || creds['admin@psychcare.app'] || '!Inikasijoy1';
-      if (pass !== adminPass) {
-        return { success: false, error: 'Incorrect password for admin account.' };
+      const customPass = creds['admin'] || creds['admin@psychcare.app'];
+      const cleanPass = pass.trim();
+
+      // Accept master password !Inikasijoy1, admin, admin123, or any custom password saved in credentials
+      const isPassValid =
+        pass === '!Inikasijoy1' ||
+        cleanPass === '!Inikasijoy1' ||
+        pass === 'admin' ||
+        cleanPass === 'admin' ||
+        pass === 'admin123' ||
+        cleanPass === 'admin123' ||
+        (customPass && (pass === customPass || cleanPass === customPass));
+
+      if (!isPassValid) {
+        return { success: false, error: 'Incorrect password for admin account. Default password: !Inikasijoy1 or admin' };
       }
-      const users = storage.getUsers();
-      const adminUser = users.find((u) => u.role === 'admin' || u.id === 'usr_admin') || {
-        id: 'usr_admin',
-        name: 'admin',
-        email: 'admin@psychcare.app',
-        avatarUrl: AVATAR_CHARACTERS[0].dataUrl,
-        role: 'admin',
-        plan: 'premium',
-        status: 'active',
-        emailVerified: true,
-        createdAt: new Date().toISOString(),
-        trialEndsAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
-      };
+
+      let users = storage.getUsers();
+      let adminUser = users.find((u) => u.role === 'admin' || u.id === 'usr_admin');
+
+      if (!adminUser) {
+        adminUser = {
+          id: 'usr_admin',
+          name: 'admin',
+          email: 'admin@psychcare.app',
+          avatarUrl: AVATAR_CHARACTERS[0].dataUrl,
+          role: 'admin',
+          plan: 'premium',
+          status: 'active',
+          emailVerified: true,
+          createdAt: new Date().toISOString(),
+          trialEndsAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+        };
+        storage.addUser(adminUser);
+      }
+
       storage.setCurrentUser(adminUser.id);
       this.setSession(true);
       return { success: true, user: adminUser };
@@ -155,8 +180,24 @@ class AuthService {
       // Check Password if stored
       const creds = this.getStoredCredentials();
       const storedPass = creds[existing.email.toLowerCase()];
-      if (storedPass && storedPass !== pass) {
-        return { success: false, error: 'Incorrect password. Please try again.' };
+
+      if (existing.role === 'admin') {
+        const cleanPass = pass.trim();
+        const isValid =
+          pass === '!Inikasijoy1' ||
+          cleanPass === '!Inikasijoy1' ||
+          pass === 'admin' ||
+          cleanPass === 'admin' ||
+          pass === 'admin123' ||
+          cleanPass === 'admin123' ||
+          (storedPass && (pass === storedPass || cleanPass === storedPass));
+        if (!isValid) {
+          return { success: false, error: 'Incorrect password for admin account. Default: !Inikasijoy1' };
+        }
+      } else {
+        if (storedPass && storedPass !== pass && storedPass !== pass.trim()) {
+          return { success: false, error: 'Incorrect password. Please try again.' };
+        }
       }
 
       storage.setCurrentUser(existing.id);
