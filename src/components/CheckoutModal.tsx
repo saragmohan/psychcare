@@ -8,11 +8,11 @@ import {
   ShieldCheck,
   Crown,
   Sparkles,
-  ArrowRight,
   Copy,
   Check,
   Smartphone,
   Info,
+  Clock,
 } from 'lucide-react';
 import type { User, PaymentInvoice } from '../types';
 import { storage } from '../services/storageService';
@@ -129,28 +129,28 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
         {/* Content Body */}
         {successInvoice ? (
-          /* Payment Success Confirmation View */
+          /* Payment Submission & Verification Confirmation View */
           <div className="p-6 sm:p-8 text-center space-y-6 animate-in zoom-in-95 duration-200">
-            <div className="w-16 h-16 rounded-full bg-emerald-500/20 border-2 border-emerald-500/40 text-emerald-400 flex items-center justify-center mx-auto shadow-xl shadow-emerald-500/10">
-              <CheckCircle2 className="w-9 h-9" />
+            <div className="w-16 h-16 rounded-full bg-amber-500/20 border-2 border-amber-500/40 text-amber-400 flex items-center justify-center mx-auto shadow-xl shadow-amber-500/10">
+              <Clock className="w-9 h-9" />
             </div>
 
             <div>
-              <span className="text-xs font-bold text-emerald-400 uppercase tracking-widest">
-                Payment Confirmed & Verified
+              <span className="text-xs font-bold text-amber-400 uppercase tracking-widest inline-flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5" /> Awaiting Admin Bank Verification
               </span>
               <h3 className="text-2xl font-black text-white mt-1">
-                Welcome to PsychCare Premium Pro!
+                Payment Submitted Successfully
               </h3>
-              <p className="text-xs sm:text-sm text-slate-300 mt-2 max-w-md mx-auto">
-                Your professional license is now active. All limitations (patient caps, DSM-5 coding locks, and export restrictions) have been instantly lifted.
+              <p className="text-xs sm:text-sm text-slate-300 mt-2 max-w-md mx-auto leading-relaxed">
+                Your UPI transfer reference <strong className="text-amber-300 font-mono">{successInvoice.paymentMethod.utrNumber}</strong> has been logged. An administrator will verify the credited funds in our bank account and activate your subscription shortly.
               </p>
             </div>
 
             {/* Receipt Summary Card */}
             <div className="bg-slate-950 p-4 sm:p-5 rounded-2xl border border-slate-800 text-left space-y-3 max-w-lg mx-auto">
               <div className="flex items-center justify-between border-b border-slate-800/80 pb-2.5">
-                <span className="text-xs text-slate-400">Invoice Number:</span>
+                <span className="text-xs text-slate-400">Provisional Invoice:</span>
                 <span className="font-mono text-xs font-bold text-white">{successInvoice.id}</span>
               </div>
               <div className="flex items-center justify-between border-b border-slate-800/80 pb-2.5">
@@ -158,7 +158,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 <span className="text-xs font-bold text-indigo-300">{successInvoice.planName}</span>
               </div>
               <div className="flex items-center justify-between border-b border-slate-800/80 pb-2.5">
-                <span className="text-xs text-slate-400">Amount Charged:</span>
+                <span className="text-xs text-slate-400">Transfer Amount:</span>
                 <span className="text-xs font-bold text-white">₹{successInvoice.amount.toLocaleString('en-IN')} INR</span>
               </div>
               <div className="flex items-center justify-between border-b border-slate-800/80 pb-2.5">
@@ -167,10 +167,16 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   DIRECT UPI TRANSFER
                 </span>
               </div>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between border-b border-slate-800/80 pb-2.5">
                 <span className="text-xs text-slate-400">Transaction UTR / Ref:</span>
-                <span className="font-mono text-xs font-bold text-emerald-400">
-                  {successInvoice.paymentMethod.utrNumber || 'Verified Instant'}
+                <span className="font-mono text-xs font-bold text-amber-300">
+                  {successInvoice.paymentMethod.utrNumber || 'N/A'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-slate-400">Verification Status:</span>
+                <span className="px-2.5 py-0.5 rounded text-[10px] font-bold bg-amber-400/20 text-amber-300 border border-amber-400/40 inline-flex items-center gap-1">
+                  <Clock className="w-3 h-3" /> PENDING ADMIN APPROVAL
                 </span>
               </div>
             </div>
@@ -183,16 +189,15 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 className="w-full sm:w-auto px-5 py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer border border-slate-700"
               >
                 <Download className="w-4 h-4 text-indigo-400" />
-                <span>Download Tax Invoice / Receipt (PDF)</span>
+                <span>Download Provisional Receipt (PDF)</span>
               </button>
 
               <button
                 type="button"
                 onClick={handleClose}
-                className="w-full sm:w-auto px-8 py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 transition cursor-pointer"
+                className="w-full sm:w-auto px-8 py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs flex items-center justify-center gap-2 border border-slate-700 transition cursor-pointer"
               >
-                <span>Launch Clinical OS</span>
-                <ArrowRight className="w-4 h-4" />
+                <span>Back to Workspace</span>
               </button>
             </div>
           </div>

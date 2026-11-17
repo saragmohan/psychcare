@@ -722,13 +722,19 @@ class StorageService {
     return this.invoices.find((inv) => inv.id === id);
   }
 
+  public getPendingInvoices(): PaymentInvoice[] {
+    return this.invoices.filter((inv) => inv.status === 'pending_verification');
+  }
+
+  public getUserPendingInvoice(userId: string): PaymentInvoice | undefined {
+    return this.invoices.find((inv) => inv.userId === userId && inv.status === 'pending_verification');
+  }
+
   public processWebSubscription(
     userId: string,
     payload: WebCheckoutPayload
   ): { success: boolean; invoice: PaymentInvoice } {
     const targetUser = this.users.find((u) => u.id === userId) || this.getCurrentUser();
-    const daysValid = payload.billingCycle === 'yearly' ? 365 : 30;
-    const expiry = new Date(Date.now() + daysValid * 24 * 60 * 60 * 1000).toISOString();
     const amount = payload.billingCycle === 'yearly' ? 19999 : 2499;
 
     const invoiceId = `INV-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`;
@@ -757,12 +763,40 @@ class StorageService {
         upiId: payload.upiId,
         utrNumber: payload.utrNumber,
       },
-      status: 'paid',
+      status: 'pending_verification',
     };
 
-    // Update user plan to premium
+    // Save invoice with pending_verification status (Admin will manually verify bank credit)
+    this.invoices = [newInvoice, ...this.invoices];
+    this.save(KEYS.INVOICES, this.invoices);
+
+    this.addAuditLog(
+      targetUser.id,
+      targetUser.name,
+      'PAYMENT_SUBMITTED',
+      targetUser.id,
+      targetUser.name,
+      `Practitioner submitted UPI payment of ₹${amount.toLocaleString('en-IN')} INR for ${newInvoice.planName} (UTR: ${payload.utrNumber || 'N/A'}, Invoice: ${invoiceId}). Awaiting admin verification.`
+    );
+
+    return { success: true, invoice: newInvoice };
+  }
+
+  public adminApprovePayment(invoiceId: string) {
+    const inv = this.invoices.find((i) => i.id === invoiceId);
+    if (!inv) return;
+
+    const daysValid = inv.billingCycle === 'yearly' ? 365 : 30;
+    const expiry = new Date(Date.now() + daysValid * 24 * 60 * 60 * 1000).toISOString();
+
+    // Mark invoice as paid
+    this.invoices = this.invoices.map((i) =>
+      i.id === invoiceId ? { ...i, status: 'paid' as const } : i
+    );
+
+    // Upgrade user to premium
     this.users = this.users.map((u) => {
-      if (u.id === targetUser.id) {
+      if (u.id === inv.userId) {
         return {
           ...u,
           plan: 'premium',
@@ -772,21 +806,39 @@ class StorageService {
       return u;
     });
 
-    // Save invoice
-    this.invoices = [newInvoice, ...this.invoices];
     this.save(KEYS.INVOICES, this.invoices);
     this.save(KEYS.USERS, this.users);
 
+    const currentUser = this.getCurrentUser();
     this.addAuditLog(
-      targetUser.id,
-      targetUser.name,
-      'PAYMENT_SUCCESS',
-      targetUser.id,
-      targetUser.name,
-      `Successfully processed one-time direct payment of ₹${amount.toLocaleString('en-IN')} INR for ${newInvoice.planName} (UTR/Ref: ${payload.utrNumber || 'N/A'}, Invoice: ${invoiceId}).`
+      currentUser.id,
+      currentUser.name,
+      'PAYMENT_VERIFIED',
+      inv.userId,
+      inv.userName,
+      `Admin manually verified UPI payment credit of ₹${inv.amount.toLocaleString('en-IN')} (UTR: ${inv.paymentMethod.utrNumber || 'N/A'}) and activated ${inv.planName} for ${inv.userName}.`
+    );
+  }
+
+  public adminRejectPayment(invoiceId: string, reason: string = 'Payment could not be verified in bank records') {
+    const inv = this.invoices.find((i) => i.id === invoiceId);
+    if (!inv) return;
+
+    this.invoices = this.invoices.map((i) =>
+      i.id === invoiceId ? { ...i, status: 'failed' as const } : i
     );
 
-    return { success: true, invoice: newInvoice };
+    this.save(KEYS.INVOICES, this.invoices);
+
+    const currentUser = this.getCurrentUser();
+    this.addAuditLog(
+      currentUser.id,
+      currentUser.name,
+      'PAYMENT_REJECTED',
+      inv.userId,
+      inv.userName,
+      `Admin rejected UPI payment of ₹${inv.amount.toLocaleString('en-IN')} (UTR: ${inv.paymentMethod.utrNumber || 'N/A'}). Reason: ${reason}.`
+    );
   }
 
   public cancelSubscription(userId: string): boolean {

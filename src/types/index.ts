@@ -130,7 +130,7 @@ export interface PaymentInvoice {
     upiId?: string;
     utrNumber?: string;
   };
-  status: 'paid' | 'refunded' | 'failed';
+  status: 'paid' | 'refunded' | 'failed' | 'pending_verification';
 }
 
 export interface WebCheckoutPayload {

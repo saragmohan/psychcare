@@ -107,6 +107,19 @@ export function generateInvoicePdf(invoice: PaymentInvoice, user: User): void {
   doc.text('Total Paid:', 135, 152);
   doc.text(`INR ${invoice.amount.toLocaleString('en-IN')}`, 165, 152);
 
+  // Status Badge on PDF
+  doc.setFontSize(10);
+  if (invoice.status === 'paid') {
+    doc.setTextColor(22, 163, 74); // emerald-600
+    doc.text('STATUS: PAID & VERIFIED', 16, 152);
+  } else if (invoice.status === 'pending_verification') {
+    doc.setTextColor(202, 138, 4); // amber-600
+    doc.text('STATUS: PENDING ADMIN VERIFICATION', 16, 152);
+  } else {
+    doc.setTextColor(225, 29, 72); // rose-600
+    doc.text('STATUS: REJECTED', 16, 152);
+  }
+
   // Payment Method Details
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(51, 65, 85);
