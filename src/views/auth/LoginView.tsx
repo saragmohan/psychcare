@@ -420,10 +420,10 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
         <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-400">
           <span>Support & Helpdesk:</span>
           <a
-            href="mailto:support@psychcare.app"
+            href="mailto:psychcare.support@gmail.com"
             className="text-indigo-400 hover:text-indigo-300 font-semibold underline transition"
           >
-            support@psychcare.app
+            psychcare.support@gmail.com
           </a>
         </div>
       </footer>

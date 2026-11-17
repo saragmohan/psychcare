@@ -195,10 +195,10 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 <p className="mt-1">
                   Please send an email with your payment screenshot and UTR number to{' '}
                   <a
-                    href={`mailto:support@psychcare.app?subject=Payment%20Verification%20Followup%20-%20Invoice%20${successInvoice.id}%20(UTR:%20${successInvoice.paymentMethod.utrNumber || ''})`}
+                    href={`mailto:psychcare.support@gmail.com?subject=Payment%20Verification%20Followup%20-%20Invoice%20${successInvoice.id}%20(UTR:%20${successInvoice.paymentMethod.utrNumber || ''})`}
                     className="text-amber-300 hover:text-amber-200 font-bold underline transition"
                   >
-                    support@psychcare.app
+                    psychcare.support@gmail.com
                   </a>
                   . Our team will verify and activate your account immediately.
                 </p>
@@ -230,8 +230,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
               <span>All rights reserved to PsychCare.</span>
               <span>
                 Support:{' '}
-                <a href="mailto:support@psychcare.app" className="text-slate-400 hover:text-slate-300 underline font-medium">
-                  support@psychcare.app
+                <a href="mailto:psychcare.support@gmail.com" className="text-slate-400 hover:text-slate-300 underline font-medium">
+                  psychcare.support@gmail.com
                 </a>
               </span>
             </div>
@@ -449,8 +449,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 <span>All rights reserved to PsychCare.</span>
                 <span>
                   Support:{' '}
-                  <a href="mailto:support@psychcare.app" className="text-slate-400 hover:text-slate-300 underline font-medium">
-                    support@psychcare.app
+                  <a href="mailto:psychcare.support@gmail.com" className="text-slate-400 hover:text-slate-300 underline font-medium">
+                    psychcare.support@gmail.com
                   </a>
                 </span>
               </div>

@@ -157,13 +157,13 @@ export function generateInvoicePdf(invoice: PaymentInvoice, user: User): void {
 
   if (isPending) {
     doc.text('Account will be activated with premium membership within 1-2 hours upon admin bank verification.', 16, 244);
-    doc.text('Beyond that hour if still not granted, please email payment screenshot to support@psychcare.app.', 16, 250);
+    doc.text('Beyond that hour if still not granted, please email payment screenshot to psychcare.support@gmail.com.', 16, 250);
   } else {
     doc.text('Thank you for partnering with PsychCare Clinical OS to power your therapy practice.', 16, 250);
   }
 
-  doc.text('For billing inquiries or tax documentation assistance, contact support@psychcare.app.', 16, 256);
-  doc.text('All rights reserved to PsychCare. • Support: support@psychcare.app', 16, 262);
+  doc.text('For billing inquiries or tax documentation assistance, contact psychcare.support@gmail.com.', 16, 256);
+  doc.text('All rights reserved to PsychCare. • Support: psychcare.support@gmail.com', 16, 262);
 
   doc.save(`PsychCare_Invoice_${invoice.id}.pdf`);
 }

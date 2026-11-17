@@ -168,10 +168,10 @@ export default function App() {
           <div className="flex items-center gap-2 text-slate-400 text-xs">
             <span>Support & Assistance:</span>
             <a
-              href="mailto:support@psychcare.app"
+              href="mailto:psychcare.support@gmail.com"
               className="text-indigo-400 hover:text-indigo-300 font-semibold underline transition"
             >
-              support@psychcare.app
+              psychcare.support@gmail.com
             </a>
           </div>
         </div>

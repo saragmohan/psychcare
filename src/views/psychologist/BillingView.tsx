@@ -94,10 +94,10 @@ export const BillingView: React.FC<BillingViewProps> = ({ currentUser }) => {
               <p className="text-[11px] text-slate-400 leading-relaxed pt-0.5">
                 Beyond that hour and membership is still not granted? Please send an email with your payment screenshot to{' '}
                 <a
-                  href={`mailto:support@psychcare.app?subject=Payment%20Verification%20Followup%20-%20UTR%20${pendingInvoice.paymentMethod.utrNumber || ''}`}
+                  href={`mailto:psychcare.support@gmail.com?subject=Payment%20Verification%20Followup%20-%20UTR%20${pendingInvoice.paymentMethod.utrNumber || ''}`}
                   className="text-amber-300 hover:text-amber-200 font-bold underline"
                 >
-                  support@psychcare.app
+                  psychcare.support@gmail.com
                 </a>{' '}
                 for immediate assistance.
               </p>
