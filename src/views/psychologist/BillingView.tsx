@@ -3,6 +3,7 @@ import {
   Crown,
   Sparkles,
   CreditCard,
+  QrCode,
   Download,
   CheckCircle2,
   Clock,
@@ -31,17 +32,6 @@ export const BillingView: React.FC<BillingViewProps> = ({ currentUser }) => {
   const trialInfo = storage.getTrialTimeRemaining(user);
   const invoices = storage.getInvoices(user.id);
   const clients = storage.getClients(user.id);
-
-  const handleCancelSubscription = () => {
-    if (
-      window.confirm(
-        'Are you sure you want to cancel your Premium Pro subscription?\n\nYou will retain access until your current billing period ends, after which your account will revert to the Basic plan (max 3 clients).'
-      )
-    ) {
-      storage.cancelSubscription(user.id);
-      forceRefresh();
-    }
-  };
 
   const handleCheckoutSuccess = (_invoice: PaymentInvoice) => {
     setIsCheckoutOpen(false);
@@ -121,10 +111,14 @@ export const BillingView: React.FC<BillingViewProps> = ({ currentUser }) => {
             {user.plan === 'premium' ? (
               <button
                 type="button"
-                onClick={handleCancelSubscription}
-                className="px-3 py-2 rounded-xl bg-slate-950 hover:bg-rose-950/30 text-slate-400 hover:text-rose-400 border border-slate-800 text-xs font-semibold transition cursor-pointer"
+                onClick={() => {
+                  setCheckoutBillingCycle('yearly');
+                  setIsCheckoutOpen(true);
+                }}
+                className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition cursor-pointer flex items-center gap-1.5 shadow-md shadow-indigo-600/30"
               >
-                Cancel Subscription
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Extend / Renew Pass</span>
               </button>
             ) : (
               <button
@@ -171,7 +165,7 @@ export const BillingView: React.FC<BillingViewProps> = ({ currentUser }) => {
             </div>
             <div className="text-[10px] text-slate-500 mt-1">
               {user.plan === 'premium'
-                ? 'Auto-renews at current locked rate'
+                ? 'Direct One-Time Pass (No auto-debit)'
                 : user.plan === 'trial'
                 ? `Trial ends ${new Date(user.trialEndsAt).toLocaleDateString()}`
                 : 'Standard access with limits'}
@@ -181,11 +175,11 @@ export const BillingView: React.FC<BillingViewProps> = ({ currentUser }) => {
           <div className="bg-slate-950/60 p-4 rounded-2xl border border-slate-800/80">
             <span className="text-[11px] text-slate-400">Payment Channel</span>
             <div className="text-lg font-bold text-indigo-300 mt-0.5 flex items-center gap-1.5">
-              <CreditCard className="w-4 h-4 text-indigo-400" />
-              <span>Web Checkout</span>
+              <QrCode className="w-4 h-4 text-emerald-400" />
+              <span>Direct UPI / QR Transfer</span>
             </div>
             <div className="text-[10px] text-slate-500 mt-1">
-              Credit Card / UPI / PayPal Direct
+              Google Pay • PhonePe • Paytm • Card Link
             </div>
           </div>
         </div>
@@ -204,17 +198,17 @@ export const BillingView: React.FC<BillingViewProps> = ({ currentUser }) => {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-indigo-400 uppercase tracking-wider">
-                  Monthly Subscription
+                  Monthly Direct Pass (30 Days)
                 </span>
-                <span className="text-[11px] text-slate-400">Cancel anytime</span>
+                <span className="text-[11px] text-slate-400">One-Time Transfer</span>
               </div>
 
               <div>
                 <div className="text-3xl font-black text-white">
-                  ₹2,499 <span className="text-sm font-normal text-slate-400">/ month</span>
+                  ₹2,499 <span className="text-sm font-normal text-slate-400">/ 30 days</span>
                 </div>
                 <p className="text-xs text-slate-400 mt-1">
-                  Flexible month-to-month access for private clinicians.
+                  Flexible access for private clinicians. No auto-debit.
                 </p>
               </div>
 
@@ -246,7 +240,7 @@ export const BillingView: React.FC<BillingViewProps> = ({ currentUser }) => {
               }}
               className="w-full py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs transition cursor-pointer flex items-center justify-center gap-2 border border-slate-700"
             >
-              <span>Subscribe Monthly (₹2,499/mo)</span>
+              <span>Unlock Monthly Pass (₹2,499)</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -260,7 +254,7 @@ export const BillingView: React.FC<BillingViewProps> = ({ currentUser }) => {
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold text-amber-300 uppercase tracking-wider">
-                  Annual Professional Tier
+                  Annual Professional Pass (365 Days)
                 </span>
                 <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-amber-400/20 text-amber-300 border border-amber-400/30">
                   ⭐ MOST POPULAR
@@ -269,10 +263,10 @@ export const BillingView: React.FC<BillingViewProps> = ({ currentUser }) => {
 
               <div>
                 <div className="text-3xl font-black text-white">
-                  ₹19,999 <span className="text-sm font-normal text-slate-400">/ year</span>
+                  ₹19,999 <span className="text-sm font-normal text-slate-400">/ 1-year pass</span>
                 </div>
                 <p className="text-xs text-amber-200/80 mt-1">
-                  Just <strong>₹1,666 / month</strong> billed annually.
+                  Just <strong>₹1,666 / month</strong>. One-time payment, no auto-renewal.
                 </p>
               </div>
 
@@ -305,7 +299,7 @@ export const BillingView: React.FC<BillingViewProps> = ({ currentUser }) => {
               className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 via-indigo-600 to-indigo-700 hover:from-amber-400 hover:to-indigo-500 text-white font-extrabold text-xs shadow-xl shadow-indigo-600/30 transition cursor-pointer flex items-center justify-center gap-2"
             >
               <Crown className="w-4 h-4 text-amber-300 fill-amber-300" />
-              <span>Unlock Annual Pro (₹19,999/yr)</span>
+              <span>Unlock Annual Pass (₹19,999)</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>

@@ -118,20 +118,22 @@ export function generateInvoicePdf(invoice: PaymentInvoice, user: User): void {
   doc.setFontSize(9);
   if (invoice.paymentMethod.type === 'card') {
     doc.text(`Credit Card: ${invoice.paymentMethod.brand || 'Card'} ending in •••• ${invoice.paymentMethod.last4 || '4242'}`, 16, 178);
+    doc.text('Payment Gateway Reference: Direct Card Processing (INR)', 16, 184);
   } else if (invoice.paymentMethod.type === 'upi') {
-    doc.text(`UPI / QR Payment: ${invoice.paymentMethod.upiId || 'Verified UPI ID'}`, 16, 178);
+    doc.text(`UPI / QR Payment: ${invoice.paymentMethod.upiId || 'Direct UPI Transfer'}`, 16, 178);
+    doc.text(`Bank Ref / UTR No: ${invoice.paymentMethod.utrNumber || 'Verified Instant Transfer'}`, 16, 184);
   } else {
-    doc.text(`Payment Gateway: ${invoice.paymentMethod.type.toUpperCase()} Web Express Checkout`, 16, 178);
+    doc.text(`Payment Channel: ${invoice.paymentMethod.type.toUpperCase()} Direct Transfer`, 16, 178);
+    doc.text(`Bank Ref / UTR No: ${invoice.paymentMethod.utrNumber || 'Verified Instant Transfer'}`, 16, 184);
   }
-  doc.text('Payment Gateway Reference: Stripe / Web Payments Engine (Mock Secure)', 16, 184);
 
   // Footer notes
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
   doc.setTextColor(148, 163, 184); // slate-400
   doc.text('Thank you for partnering with PsychCare Clinical OS to power your therapy practice.', 16, 250);
-  doc.text('For billing inquiries or tax documentation assistance, contact billing@psychcare.app or support@psychcare.app.', 16, 256);
-  doc.text('PsychCare Inc. • 100 Montgomery St, Suite 1200, San Francisco, CA 94104', 16, 262);
+  doc.text('For billing inquiries or tax documentation assistance, contact billing@psychcare.in or support@psychcare.in.', 16, 256);
+  doc.text('PsychCare Health Technologies Pvt Ltd • Bangalore, India (GST Exempt Software License)', 16, 262);
 
   doc.save(`PsychCare_Invoice_${invoice.id}.pdf`);
 }

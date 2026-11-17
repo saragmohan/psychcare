@@ -11,6 +11,11 @@ import {
   Sparkles,
   ArrowRight,
   ExternalLink,
+  Copy,
+  Check,
+  Building2,
+  Smartphone,
+  Info,
 } from 'lucide-react';
 import type { User, PaymentInvoice, PaymentMethodType } from '../types';
 import { storage } from '../services/storageService';
@@ -31,13 +36,12 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   initialBillingCycle = 'yearly',
   onSuccess,
 }) => {
+  const paymentConfig = storage.getPaymentConfig();
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>(initialBillingCycle);
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>('card');
-  const [cardNumber, setCardNumber] = useState('4242 •••• •••• 4242');
-  const [cardName, setCardName] = useState(currentUser.name || 'Dr. Therapist');
-  const [cardExpiry, setCardExpiry] = useState('12/28');
-  const [cardCvc, setCardCvc] = useState('884');
-  const [upiId, setUpiId] = useState('psychologist@upi');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>('upi');
+  const [utrNumber, setUtrNumber] = useState('');
+  const [copiedUpi, setCopiedUpi] = useState(false);
+  const [copiedAcc, setCopiedAcc] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [successInvoice, setSuccessInvoice] = useState<PaymentInvoice | null>(null);
 
@@ -47,33 +51,47 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const originalYearlyValue = 2499 * 12; // 29988
   const savings = originalYearlyValue - 19999; // 9989
 
-  const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let val = e.target.value.replace(/\D/g, '').substring(0, 16);
-    let formatted = val.match(/.{1,4}/g)?.join(' ') || val;
-    setCardNumber(formatted);
+  const upiUrl = `upi://pay?pa=${paymentConfig.upiId}&pn=${encodeURIComponent(
+    paymentConfig.payeeName
+  )}&am=${planPrice}&cu=INR&tn=${encodeURIComponent(
+    `PsychCare ${billingCycle === 'yearly' ? 'Annual Pass' : 'Monthly Pass'}`
+  )}`;
+
+  const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(
+    upiUrl
+  )}&margin=8`;
+
+  const directPaymentLink =
+    billingCycle === 'yearly'
+      ? paymentConfig.yearlyPaymentLink
+      : paymentConfig.monthlyPaymentLink;
+
+  const handleCopyUpi = () => {
+    navigator.clipboard.writeText(paymentConfig.upiId);
+    setCopiedUpi(true);
+    setTimeout(() => setCopiedUpi(false), 2000);
   };
 
-  const handleExpiryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let val = e.target.value.replace(/\D/g, '').substring(0, 4);
-    if (val.length >= 3) {
-      val = val.substring(0, 2) + '/' + val.substring(2);
-    }
-    setCardExpiry(val);
+  const handleCopyAcc = () => {
+    navigator.clipboard.writeText(paymentConfig.bankDetails.accountNumber);
+    setCopiedAcc(true);
+    setTimeout(() => setCopiedAcc(false), 2000);
   };
 
   const handleProcessPayment = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsProcessing(true);
+    if (!utrNumber.trim()) {
+      alert('Please enter your 12-digit UPI UTR / Transaction Reference number from your payment confirmation screen.');
+      return;
+    }
 
+    setIsProcessing(true);
     setTimeout(() => {
       const result = storage.processWebSubscription(currentUser.id, {
         billingCycle,
         paymentMethodType: paymentMethod,
-        cardNumber,
-        cardName,
-        cardExpiry,
-        cardCvc,
-        upiId: paymentMethod === 'upi' ? upiId : undefined,
+        utrNumber: utrNumber.trim(),
+        upiId: paymentConfig.upiId,
       });
 
       setIsProcessing(false);
@@ -81,11 +99,12 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       if (onSuccess) {
         onSuccess(result.invoice);
       }
-    }, 1200);
+    }, 800);
   };
 
   const handleClose = () => {
     setSuccessInvoice(null);
+    setUtrNumber('');
     onClose();
   };
 
@@ -158,11 +177,20 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 <span className="text-xs text-slate-400">Amount Charged:</span>
                 <span className="text-xs font-bold text-white">₹{successInvoice.amount.toLocaleString('en-IN')} INR</span>
               </div>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between border-b border-slate-800/80 pb-2.5">
                 <span className="text-xs text-slate-400">Payment Channel:</span>
                 <span className="text-xs font-semibold text-slate-300">
-                  {successInvoice.paymentMethod.type.toUpperCase()}{' '}
-                  {successInvoice.paymentMethod.last4 ? `(•••• ${successInvoice.paymentMethod.last4})` : ''}
+                  {successInvoice.paymentMethod.type === 'upi'
+                    ? 'UPI / QR DIRECT TRANSFER'
+                    : successInvoice.paymentMethod.type === 'card'
+                    ? 'PAYMENT LINK / CARD'
+                    : 'DIRECT BANK TRANSFER (IMPS)'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-slate-400">Transaction UTR / Ref:</span>
+                <span className="font-mono text-xs font-bold text-emerald-400">
+                  {successInvoice.paymentMethod.utrNumber || 'Verified Instant'}
                 </span>
               </div>
             </div>
@@ -195,7 +223,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
             <div className="space-y-2">
               <div className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                <span>1. Select Subscription Frequency</span>
+                <span>1. Select License Pass (One-Time Direct Transfer)</span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -209,14 +237,14 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-sm text-white">Annual Membership</span>
+                    <span className="font-bold text-sm text-white">Annual Pass (365 Days)</span>
                     <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-amber-400 text-slate-950">
                       SAVE ₹{savings.toLocaleString('en-IN')} (33%)
                     </span>
                   </div>
                   <div>
-                    <div className="text-xl font-black text-white">₹19,999 <span className="text-xs font-normal text-slate-400">/ year</span></div>
-                    <div className="text-[11px] text-amber-300/90 font-medium mt-0.5">Equals ₹1,666 / month (Billed yearly)</div>
+                    <div className="text-xl font-black text-white">₹19,999 <span className="text-xs font-normal text-slate-400">/ 1-year pass</span></div>
+                    <div className="text-[11px] text-amber-300/90 font-medium mt-0.5">Equals ₹1,666 / mo • No automatic renewal</div>
                   </div>
                 </button>
 
@@ -230,38 +258,27 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-sm text-white">Monthly Plan</span>
-                    <span className="text-[11px] text-slate-400">Flexibility</span>
+                    <span className="font-bold text-sm text-white">Monthly Pass (30 Days)</span>
+                    <span className="text-[11px] text-slate-400">Flexible Pass</span>
                   </div>
                   <div>
-                    <div className="text-xl font-black text-white">₹2,499 <span className="text-xs font-normal text-slate-400">/ month</span></div>
-                    <div className="text-[11px] text-slate-400 mt-0.5">Billed monthly, cancel anytime</div>
+                    <div className="text-xl font-black text-white">₹2,499 <span className="text-xs font-normal text-slate-400">/ 30-day pass</span></div>
+                    <div className="text-[11px] text-slate-400 mt-0.5">One-time payment • No auto-debit</div>
                   </div>
                 </button>
               </div>
             </div>
 
-            {/* Step 2: Payment Gateway & Method Selector */}
+            {/* Step 2: Payment Method Selector */}
             <div className="space-y-3">
               <div className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
-                <span>2. Select Payment Method</span>
-                <span className="text-[11px] text-slate-500 font-normal">Instant activation</span>
+                <span>2. Choose Direct Transfer Channel</span>
+                <span className="text-[11px] text-emerald-400 font-semibold flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3" /> Zero Gateway Fee
+                </span>
               </div>
 
               <div className="grid grid-cols-3 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setPaymentMethod('card')}
-                  className={`py-2.5 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer ${
-                    paymentMethod === 'card'
-                      ? 'bg-indigo-600 text-white border-indigo-500 shadow-md'
-                      : 'bg-slate-950 text-slate-400 border-slate-800 hover:text-white'
-                  }`}
-                >
-                  <CreditCard className="w-4 h-4" />
-                  <span>Card</span>
-                </button>
-
                 <button
                   type="button"
                   onClick={() => setPaymentMethod('upi')}
@@ -277,157 +294,223 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
                 <button
                   type="button"
-                  onClick={() => setPaymentMethod('paypal')}
+                  onClick={() => setPaymentMethod('card')}
                   className={`py-2.5 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer ${
-                    paymentMethod === 'paypal'
+                    paymentMethod === 'card'
                       ? 'bg-indigo-600 text-white border-indigo-500 shadow-md'
                       : 'bg-slate-950 text-slate-400 border-slate-800 hover:text-white'
                   }`}
                 >
                   <ExternalLink className="w-4 h-4" />
-                  <span>PayPal</span>
+                  <span>Payment Link</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod('netbanking')}
+                  className={`py-2.5 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer ${
+                    paymentMethod === 'netbanking'
+                      ? 'bg-indigo-600 text-white border-indigo-500 shadow-md'
+                      : 'bg-slate-950 text-slate-400 border-slate-800 hover:text-white'
+                  }`}
+                >
+                  <Building2 className="w-4 h-4" />
+                  <span>Bank (IMPS)</span>
                 </button>
               </div>
 
-              {/* Card Form */}
-              {paymentMethod === 'card' && (
-                <div className="bg-slate-950/70 p-4 rounded-2xl border border-slate-800 space-y-3 animate-in fade-in">
-                  <div>
-                    <label className="block text-[11px] font-semibold text-slate-400 mb-1">
-                      Card Number
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        required
-                        value={cardNumber}
-                        onChange={handleCardNumberChange}
-                        placeholder="4242 4242 4242 4242"
-                        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 font-mono"
-                      />
-                      <div className="absolute right-3 top-2.5 flex items-center gap-1">
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-600/30 text-blue-300 border border-blue-500/40">
-                          VISA
-                        </span>
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-orange-600/30 text-orange-300 border border-orange-500/40">
-                          MC
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-[11px] font-semibold text-slate-400 mb-1">
-                        Cardholder Name
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={cardName}
-                        onChange={(e) => setCardName(e.target.value)}
-                        placeholder="Dr. Full Name"
-                        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <label className="block text-[11px] font-semibold text-slate-400 mb-1">
-                          Expiry
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          value={cardExpiry}
-                          onChange={handleExpiryChange}
-                          placeholder="MM/YY"
-                          className="w-full bg-slate-900 border border-slate-800 rounded-xl px-2 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 text-center font-mono"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[11px] font-semibold text-slate-400 mb-1">
-                          CVC
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          maxLength={4}
-                          value={cardCvc}
-                          onChange={(e) => setCardCvc(e.target.value.replace(/\D/g, ''))}
-                          placeholder="CVC"
-                          className="w-full bg-slate-900 border border-slate-800 rounded-xl px-2 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 text-center font-mono"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* UPI / QR Form */}
+              {/* UPI Tab */}
               {paymentMethod === 'upi' && (
-                <div className="bg-slate-950/70 p-4 rounded-2xl border border-slate-800 space-y-3 animate-in fade-in">
-                  <div className="flex items-center gap-3">
-                    <div className="p-3 bg-white rounded-xl shrink-0 shadow-md">
-                      <QrCode className="w-16 h-16 text-slate-900" />
+                <div className="bg-slate-950/70 p-4 sm:p-5 rounded-2xl border border-slate-800 space-y-4 animate-in fade-in">
+                  <div className="flex flex-col sm:flex-row items-center gap-4">
+                    {/* Live Scannable QR Code */}
+                    <div className="p-3 bg-white rounded-2xl shrink-0 shadow-lg border border-slate-700 flex flex-col items-center">
+                      <img
+                        src={qrImageUrl}
+                        alt="PsychCare UPI QR Code"
+                        className="w-36 h-36 sm:w-40 sm:h-40 rounded-lg object-contain"
+                      />
+                      <span className="text-[10px] font-black text-slate-800 mt-1 uppercase tracking-wider">
+                        ₹{planPrice.toLocaleString('en-IN')} INR
+                      </span>
                     </div>
-                    <div className="space-y-1 text-xs">
-                      <div className="font-bold text-white">Scan with any UPI App</div>
-                      <div className="text-[11px] text-slate-400">
-                        Supports Google Pay, PhonePe, Paytm, and BHIM UPI.
-                      </div>
-                      <div className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
-                        <CheckCircle2 className="w-3 h-3" /> Zero transaction surcharges
-                      </div>
-                    </div>
-                  </div>
 
-                  <div>
-                    <label className="block text-[11px] font-semibold text-slate-400 mb-1">
-                      Or Pay via UPI Virtual Address (VPA)
-                    </label>
-                    <input
-                      type="text"
-                      value={upiId}
-                      onChange={(e) => setUpiId(e.target.value)}
-                      placeholder="username@bank"
-                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 font-mono"
-                    />
+                    {/* VPA Details & Quick Copy */}
+                    <div className="space-y-3 flex-1 min-w-0 text-center sm:text-left">
+                      <div>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                          Official Merchant UPI VPA
+                        </span>
+                        <div className="flex items-center justify-center sm:justify-start gap-2 mt-1">
+                          <code className="text-sm font-black text-amber-300 font-mono bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-800">
+                            {paymentConfig.upiId}
+                          </code>
+                          <button
+                            type="button"
+                            onClick={handleCopyUpi}
+                            className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer border border-slate-700"
+                          >
+                            {copiedUpi ? (
+                              <>
+                                <Check className="w-3.5 h-3.5 text-emerald-400" />
+                                <span className="text-emerald-400">Copied!</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="w-3.5 h-3.5" />
+                                <span>Copy</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="text-[11px] text-slate-400 leading-relaxed">
+                        Payee: <strong className="text-white">{paymentConfig.payeeName}</strong>
+                        <div className="text-[10px] text-slate-500 mt-0.5">
+                          Works with Google Pay, PhonePe, Paytm, BHIM, Cred, and all mobile banking apps.
+                        </div>
+                      </div>
+
+                      {/* Direct UPI Mobile Link */}
+                      <a
+                        href={upiUrl}
+                        className="w-full py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-2 transition shadow-lg shadow-emerald-600/20"
+                      >
+                        <Smartphone className="w-4 h-4" />
+                        <span>Pay in UPI App (GPay / PhonePe / Paytm)</span>
+                      </a>
+                    </div>
                   </div>
                 </div>
               )}
 
-              {/* PayPal / Express Form */}
-              {paymentMethod === 'paypal' && (
-                <div className="bg-slate-950/70 p-4 rounded-2xl border border-slate-800 space-y-2 text-center animate-in fade-in">
-                  <p className="text-xs text-slate-300">
-                    You will be securely routed through PayPal Express web authentication to complete this subscription order.
+              {/* Direct Payment Link Tab */}
+              {paymentMethod === 'card' && (
+                <div className="bg-slate-950/70 p-4 sm:p-5 rounded-2xl border border-slate-800 space-y-3 animate-in fade-in">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-bold text-sm text-white">Direct Web Payment Portal</div>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        Pay using Debit Card, Credit Card (RuPay/Visa/Mastercard), or NetBanking.
+                      </p>
+                    </div>
+                    <CreditCard className="w-6 h-6 text-indigo-400 shrink-0" />
+                  </div>
+
+                  <a
+                    href={directPaymentLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full py-3 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center justify-center gap-2 transition shadow-lg shadow-indigo-600/30"
+                  >
+                    <span>Open Payment Portal (₹{planPrice.toLocaleString('en-IN')})</span>
+                    <ExternalLink className="w-4 h-4" />
+                  </a>
+
+                  <p className="text-[11px] text-slate-500 text-center">
+                    Opens in a secure new tab. After completing payment, enter the Transaction Reference ID below.
                   </p>
-                  <div className="text-[11px] text-amber-400 font-medium">
-                    1-Click authorization with Buyer Protection
+                </div>
+              )}
+
+              {/* Bank Transfer Tab */}
+              {paymentMethod === 'netbanking' && (
+                <div className="bg-slate-950/70 p-4 sm:p-5 rounded-2xl border border-slate-800 space-y-3 animate-in fade-in text-xs">
+                  <div className="flex items-center gap-2 text-indigo-400 font-bold">
+                    <Building2 className="w-4 h-4" />
+                    <span>Direct Institutional / Clinic Bank Transfer (NEFT / IMPS)</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    <div className="bg-slate-900 p-3 rounded-xl border border-slate-800">
+                      <span className="text-[10px] text-slate-500 uppercase font-semibold">Bank Name</span>
+                      <div className="font-bold text-white mt-0.5">{paymentConfig.bankDetails.bankName}</div>
+                    </div>
+
+                    <div className="bg-slate-900 p-3 rounded-xl border border-slate-800">
+                      <span className="text-[10px] text-slate-500 uppercase font-semibold">Account Holder</span>
+                      <div className="font-bold text-white mt-0.5">{paymentConfig.bankDetails.accountHolder}</div>
+                    </div>
+
+                    <div className="bg-slate-900 p-3 rounded-xl border border-slate-800">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] text-slate-500 uppercase font-semibold">Account Number</span>
+                        <button
+                          type="button"
+                          onClick={handleCopyAcc}
+                          className="text-[10px] text-indigo-400 hover:text-white cursor-pointer font-bold"
+                        >
+                          {copiedAcc ? 'Copied!' : 'Copy'}
+                        </button>
+                      </div>
+                      <div className="font-mono font-bold text-amber-300 mt-0.5">
+                        {paymentConfig.bankDetails.accountNumber}
+                      </div>
+                    </div>
+
+                    <div className="bg-slate-900 p-3 rounded-xl border border-slate-800">
+                      <span className="text-[10px] text-slate-500 uppercase font-semibold">IFSC Code</span>
+                      <div className="font-mono font-bold text-white mt-0.5">
+                        {paymentConfig.bankDetails.ifscCode}
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
             </div>
 
+            {/* Step 3: Enter UPI UTR / Transaction Reference ID */}
+            <div className="bg-slate-950/90 p-4 sm:p-5 rounded-2xl border border-slate-800 space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-white flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                  <span>3. Enter 12-Digit UPI UTR / Transaction Reference ID</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setUtrNumber(`4${Math.floor(10000000000 + Math.random() * 90000000000)}`)}
+                  className="text-[11px] text-indigo-400 hover:text-indigo-300 font-semibold cursor-pointer underline"
+                >
+                  Auto-fill Test UTR
+                </button>
+              </div>
+
+              <input
+                type="text"
+                required
+                value={utrNumber}
+                onChange={(e) => setUtrNumber(e.target.value.trim())}
+                placeholder="e.g. 412389104523 (12-digit UTR)"
+                className="w-full bg-slate-900 border border-slate-700 focus:border-indigo-500 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 font-mono tracking-wider focus:outline-none"
+              />
+
+              <div className="flex items-start gap-1.5 text-[11px] text-slate-400 pt-0.5">
+                <Info className="w-3.5 h-3.5 text-slate-500 shrink-0 mt-0.5" />
+                <span>
+                  Found in your Google Pay, PhonePe, Paytm, or bank transfer confirmation screen. This activates your pass immediately and generates your official receipt.
+                </span>
+              </div>
+            </div>
+
             {/* Order Summary & Total Due */}
             <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-2 text-xs">
               <div className="flex justify-between text-slate-400">
-                <span>Plan:</span>
+                <span>License Plan:</span>
                 <span className="font-semibold text-white">
-                  PsychCare Premium Pro ({billingCycle === 'yearly' ? 'Annual' : 'Monthly'})
+                  PsychCare Premium Pro ({billingCycle === 'yearly' ? '365-Day Annual Pass' : '30-Day Monthly Pass'})
                 </span>
               </div>
               <div className="flex justify-between text-slate-400">
-                <span>Access:</span>
-                <span className="font-semibold text-emerald-400">Unlimited Patients & Full DSM-5 Suite</span>
+                <span>Direct Fee:</span>
+                <span className="font-semibold text-emerald-400">One-Time Direct Transfer (No Auto-Debit)</span>
               </div>
               <div className="flex justify-between text-slate-400">
                 <span>Applicable Taxes:</span>
                 <span className="font-semibold text-white">₹0.00 INR</span>
               </div>
               <div className="border-t border-slate-800 pt-2 flex justify-between items-center">
-                <span className="font-bold text-sm text-white">Total Due Today:</span>
+                <span className="font-bold text-sm text-white">Total Transfer Amount:</span>
                 <span className="font-black text-lg text-emerald-400">₹{planPrice.toLocaleString('en-IN')} INR</span>
               </div>
             </div>
@@ -444,17 +527,17 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 ) : (
                   <>
                     <Lock className="w-4 h-4" />
-                    <span>AUTHORIZE & PAY ₹{planPrice.toLocaleString('en-IN')} INR</span>
+                    <span>CONFIRM PAYMENT & ACTIVATE {billingCycle === 'yearly' ? 'ANNUAL' : 'MONTHLY'} PASS</span>
                   </>
                 )}
               </button>
 
               <div className="flex items-center justify-center gap-4 text-[11px] text-slate-400">
                 <span className="flex items-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5 text-teal-400" /> 14-Day Money Back Guarantee
+                  <ShieldCheck className="w-3.5 h-3.5 text-teal-400" /> Instant Software Activation
                 </span>
                 <span>•</span>
-                <span>Cancel Anytime with 1 Click</span>
+                <span>Official PDF Tax Receipt Issued</span>
               </div>
             </div>
           </form>

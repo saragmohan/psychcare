@@ -1,4 +1,4 @@
-import type { User, Client, SessionNote, AssessmentResult, Appointment, AdminAuditLog, PaymentInvoice, WebCheckoutPayload } from '../types';
+import type { User, Client, SessionNote, AssessmentResult, Appointment, AdminAuditLog, PaymentInvoice, WebCheckoutPayload, DirectPaymentConfig } from '../types';
 import {
   INITIAL_USERS,
   INITIAL_CLIENTS,
@@ -10,6 +10,19 @@ import {
 } from './mockData';
 import { getDefaultAvatar } from './avatarCharacters';
 
+const DEFAULT_PAYMENT_CONFIG: DirectPaymentConfig = {
+  upiId: 'psychcare@icici',
+  payeeName: 'PsychCare Clinical OS',
+  monthlyPaymentLink: 'https://rzp.io/l/psychcare-monthly',
+  yearlyPaymentLink: 'https://rzp.io/l/psychcare-annual',
+  bankDetails: {
+    bankName: 'HDFC Bank',
+    accountHolder: 'PsychCare Health Technologies Pvt Ltd',
+    accountNumber: '50200088991122',
+    ifscCode: 'HDFC0001234',
+  },
+};
+
 const KEYS = {
   USERS: 'psychcare_users_v1',
   CURRENT_USER_ID: 'psychcare_current_user_id_v1',
@@ -19,6 +32,7 @@ const KEYS = {
   APPOINTMENTS: 'psychcare_appointments_v1',
   LOGS: 'psychcare_logs_v1',
   INVOICES: 'psychcare_invoices_v1',
+  PAYMENT_CONFIG: 'psychcare_payment_config_v1',
 };
 
 class StorageService {
@@ -30,6 +44,7 @@ class StorageService {
   private appointments: Appointment[];
   private logs: AdminAuditLog[];
   private invoices: PaymentInvoice[];
+  private paymentConfig: DirectPaymentConfig;
   private listeners: (() => void)[] = [];
 
   constructor() {
@@ -41,6 +56,7 @@ class StorageService {
     this.appointments = this.load(KEYS.APPOINTMENTS, INITIAL_APPOINTMENTS);
     this.logs = this.load(KEYS.LOGS, INITIAL_AUDIT_LOGS);
     this.invoices = this.load(KEYS.INVOICES, INITIAL_INVOICES);
+    this.paymentConfig = this.load(KEYS.PAYMENT_CONFIG, DEFAULT_PAYMENT_CONFIG);
 
     this.checkTrialExpirations();
 
@@ -692,6 +708,16 @@ class StorageService {
     return this.invoices;
   }
 
+  public getPaymentConfig(): DirectPaymentConfig {
+    return this.paymentConfig;
+  }
+
+  public updatePaymentConfig(config: Partial<DirectPaymentConfig>): DirectPaymentConfig {
+    this.paymentConfig = { ...this.paymentConfig, ...config };
+    this.save(KEYS.PAYMENT_CONFIG, this.paymentConfig);
+    return this.paymentConfig;
+  }
+
   public getInvoiceById(id: string): PaymentInvoice | undefined {
     return this.invoices.find((inv) => inv.id === id);
   }
@@ -707,7 +733,11 @@ class StorageService {
 
     const invoiceId = `INV-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`;
 
-    const last4 = payload.cardNumber ? payload.cardNumber.replace(/\s+/g, '').slice(-4) : '4242';
+    const last4 = payload.utrNumber
+      ? payload.utrNumber.slice(-4)
+      : payload.cardNumber
+      ? payload.cardNumber.replace(/\s+/g, '').slice(-4)
+      : '4242';
     const brand = payload.paymentMethodType === 'card' ? 'Visa' : undefined;
 
     const newInvoice: PaymentInvoice = {
@@ -715,7 +745,7 @@ class StorageService {
       userId: targetUser.id,
       userName: targetUser.name,
       userEmail: targetUser.email,
-      planName: `PsychCare Premium Pro (${payload.billingCycle === 'yearly' ? 'Annual' : 'Monthly'})`,
+      planName: `PsychCare Premium Pro (${payload.billingCycle === 'yearly' ? 'Annual Pass' : 'Monthly Pass'})`,
       billingCycle: payload.billingCycle,
       amount,
       currency: 'INR',
@@ -725,6 +755,7 @@ class StorageService {
         last4: payload.paymentMethodType === 'card' ? last4 : undefined,
         brand: brand,
         upiId: payload.upiId,
+        utrNumber: payload.utrNumber,
       },
       status: 'paid',
     };
@@ -752,7 +783,7 @@ class StorageService {
       'PAYMENT_SUCCESS',
       targetUser.id,
       targetUser.name,
-      `Successfully processed web payment of ₹${amount.toLocaleString('en-IN')} INR for ${newInvoice.planName} (Invoice: ${invoiceId}).`
+      `Successfully processed one-time direct payment of ₹${amount.toLocaleString('en-IN')} INR for ${newInvoice.planName} (UTR/Ref: ${payload.utrNumber || 'N/A'}, Invoice: ${invoiceId}).`
     );
 
     return { success: true, invoice: newInvoice };

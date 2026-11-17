@@ -128,6 +128,7 @@ export interface PaymentInvoice {
     last4?: string;
     brand?: string;
     upiId?: string;
+    utrNumber?: string;
   };
   status: 'paid' | 'refunded' | 'failed';
 }
@@ -140,10 +141,24 @@ export interface WebCheckoutPayload {
   cardExpiry?: string;
   cardCvc?: string;
   upiId?: string;
+  utrNumber?: string;
   billingAddress?: {
     line1?: string;
     city?: string;
     country?: string;
     postalCode?: string;
+  };
+}
+
+export interface DirectPaymentConfig {
+  upiId: string;
+  payeeName: string;
+  monthlyPaymentLink: string;
+  yearlyPaymentLink: string;
+  bankDetails: {
+    bankName: string;
+    accountHolder: string;
+    accountNumber: string;
+    ifscCode: string;
   };
 }
